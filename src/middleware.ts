@@ -23,10 +23,13 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  // Refreshes the session cookie when needed. Do not put code between createServerClient and getUser.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Refreshes the session cookie when needed, then checks the sign-in token's signature.
+  // getClaims verifies the token locally against the project's cached public keys, so most page
+  // changes skip a round trip to the Auth server (getUser called it on every navigation).
+  // Projects still on the older shared-secret signing key fall back to a server check automatically.
+  // Do not put code between createServerClient and getClaims.
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims?.sub ? data.claims : null;
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PAGES.some((p) => path === p || path.startsWith(p + '/'));

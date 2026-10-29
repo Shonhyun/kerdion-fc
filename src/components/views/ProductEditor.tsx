@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { AppData, Line, Recipe, Size } from '@/lib/types';
 import { alertText, calc, commitLib, curSize, delivery, getLib, getR, lineCost, lineQty, refOf, rName, usedIn } from '@/lib/calc';
-import { dropKeys, dupRecipe, newLib, newLine, sizeAdd, sizeDel, sizesOn } from '@/lib/data';
+import { dupRecipe, removeRecipe, newLib, newLine, sizeAdd, sizeDel, sizesOn } from '@/lib/data';
 import { focusSoon, num, pct, peso } from '@/lib/format';
 import { Icon, Peso, Pill, Suffix, UnitSelect, useHelp } from '../ui';
 import { getData, showToast, update, useData, useT } from '@/store/store';
@@ -302,10 +302,7 @@ export default function ProductEditor({ id }: { id: string }) {
   };
   const del = () => {
     const nm = rName(S, r);
-    update((d) => {
-      dropKeys(d, [r.id, ...r.sizes.map((s) => r.id + '~' + s.id)]);
-      d.recipes = d.recipes.filter((x) => x.id !== r.id);
-    }, L('Deleted ', 'Binura ang ') + nm);
+    update((d) => { removeRecipe(d, r.id); }, L('Deleted ', 'Binura ang ') + nm);
     router.push('/products');
   };
   const dup = () => {

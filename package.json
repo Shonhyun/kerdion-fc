@@ -4,7 +4,7 @@
   "private": true,
   "description": "Kerdion: food costing and profit planner for small food businesses",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",

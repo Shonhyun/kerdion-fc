@@ -22,7 +22,7 @@ export default function Expenses() {
               <div className="fx-row" key={f.id}>
                 <input className="input" id={f.id + '-name'} value={f.name} placeholder={L('e.g. Rent', 'hal. Renta')} aria-label={L('Expense name', 'Pangalan ng bayarin')} autoComplete="off" onChange={(e) => set(f.id, 'name', e.target.value)} />
                 <Peso id={f.id + '-amount'} value={f.amount} label={L('Monthly amount for ', 'Halaga kada buwan ng ') + (f.name || 'expense')} onChange={(v) => set(f.id, 'amount', v)} />
-                <button className="icon-btn" aria-label={L('Remove ', 'Tanggalin ang ') + (f.name || 'expense')} onClick={() => update((d) => { d.fixed = d.fixed.filter((x) => x.id !== f.id); }, L('Deleted ', 'Binura ang ') + (f.name || L('expense', 'bayarin')))}><Icon name="x" size={18} /></button>
+                <button className="icon-btn icon-del" title={L('Delete', 'Burahin')} aria-label={L('Delete ', 'Burahin ang ') + (f.name || 'expense')} onClick={() => update((d) => { d.fixed = d.fixed.filter((x) => x.id !== f.id); }, L('Deleted ', 'Binura ang ') + (f.name || L('expense', 'bayarin')))}><Icon name="trash" size={19} /></button>
               </div>
             ))}
           </div>

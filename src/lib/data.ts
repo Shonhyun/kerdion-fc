@@ -184,6 +184,13 @@ export function dropKeys(s: AppData, keys: string[]) {
   if (keys.includes(s.ups.main)) s.ups.main = '';
   if (keys.includes(s.ups.addon)) s.ups.addon = '';
 }
+/** Deletes a product or add-on and everything that points at it (sizes, combos, upsell, daily log). */
+export function removeRecipe(s: AppData, id: string) {
+  const r = s.recipes.find((x) => x.id === id);
+  if (!r) return;
+  dropKeys(s, [r.id, ...r.sizes.map((z) => r.id + '~' + z.id)]);
+  s.recipes = s.recipes.filter((x) => x.id !== id);
+}
 export function sizesOn(s: AppData, r: Recipe): Size {
   const L = makeL(s.lang);
   const a: Size = { id: nid('s'), name: L('Regular', 'Regular'), price: r.price, orders: r.orders }, b: Size = { id: nid('s'), name: L('Large', 'Large'), price: '', orders: '0' };

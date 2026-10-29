@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useId, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { HELP } from '@/lib/help';
 import { UNIT_LIST } from '@/lib/calc';
 import { useT } from '@/store/store';
@@ -32,6 +32,9 @@ const P: Record<string, ReactNode> = {
   target: <><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="4" /><circle cx="12" cy="12" r="0.8" fill="currentColor" /></>,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   logout: <><path d="M15 4h4v16h-4" /><path d="M10 8l-4 4 4 4M6 12h10" /></>,
+  dots: <><circle cx="5" cy="12" r="1.4" fill="currentColor" /><circle cx="12" cy="12" r="1.4" fill="currentColor" /><circle cx="19" cy="12" r="1.4" fill="currentColor" /></>,
+  trash: <><path d="M4 7h16" /><path d="M9 7V4h6v3" /><path d="M6 7l1 13h10l1-13" /><path d="M10 11v6M14 11v6" /></>,
+  edit: <><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M13 7l4 4" /></>,
 };
 export function Icon({ name, size = 20 }: { name: string; size?: number }) {
   return (
@@ -111,6 +114,49 @@ export function useHelp(key: string) {
   const h = HELP[key];
   const text = h ? <p className="qtext" id={id} hidden={!open}>{L(h[0], h[1])}</p> : null;
   return { btn, text };
+}
+
+export type MenuItem = { label: string; icon?: string; danger?: boolean; onSelect: () => void };
+
+/** Small "⋯" menu for quick actions on a card (edit, duplicate, delete). */
+export function MoreMenu({ label, items }: { label: string; items: MenuItem[] }) {
+  const [open, setOpen] = useState(false);
+  const wrap = useRef<HTMLDivElement>(null);
+  const btn = useRef<HTMLButtonElement>(null);
+  const id = useId();
+  useEffect(() => {
+    if (!open) return;
+    const first = wrap.current?.querySelector<HTMLButtonElement>('[role="menuitem"]');
+    first?.focus();
+    const onDown = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setOpen(false); btn.current?.focus(); return; }
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+      const all = Array.from(wrap.current?.querySelectorAll<HTMLButtonElement>('[role="menuitem"]') || []);
+      const i = all.indexOf(document.activeElement as HTMLButtonElement);
+      all[(i + (e.key === 'ArrowDown' ? 1 : -1) + all.length) % all.length]?.focus();
+      e.preventDefault();
+    };
+    document.addEventListener('pointerdown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('pointerdown', onDown); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+  return (
+    <div className="more" ref={wrap}>
+      <button ref={btn} type="button" className="more-btn" aria-label={label} aria-haspopup="menu" aria-expanded={open} aria-controls={id}
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((o) => !o); }}><Icon name="dots" size={20} /></button>
+      {open && (
+        <div className="more-menu" role="menu" id={id}>
+          {items.map((it) => (
+            <button key={it.label} type="button" role="menuitem" className="more-item" data-danger={it.danger || undefined}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(false); it.onSelect(); }}>
+              {it.icon && <Icon name={it.icon} size={18} />}{it.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function Pill({ tone, children, style }: { tone?: string; children: ReactNode; style?: React.CSSProperties }) {

@@ -170,6 +170,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .icon-btn { width: 44px; height: 44px; flex: 0 0 44px; border-radius: 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
 .icon-btn:hover { background: var(--loss-soft); color: var(--loss); }
+.icon-del { color: var(--loss); opacity: .75; }
+.icon-del:hover { opacity: 1; }
 
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .field > label, .lbl { font-size: 13px; font-weight: 700; color: var(--ink); }
@@ -243,10 +245,26 @@ select.input { padding: 0 8px; cursor: pointer; }
 
 /* ---------- products ---------- */
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: 14px; }
-.pcard { display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; min-width: 0; }
+.pcard { position: relative; display: flex; flex-direction: column; gap: 14px; padding: 18px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); text-decoration: none; min-width: 0; }
 .pcard:hover { border-color: var(--ink); }
 .pcard-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.pcard-top strong { font-family: var(--f-display); font-size: 20px; font-weight: 800; overflow-wrap: anywhere; line-height: 1.2; }
+.pcard-top strong, .pcard-name { font-family: var(--f-display); font-size: 20px; font-weight: 800; overflow-wrap: anywhere; line-height: 1.2; }
+.pcard-top .pill { margin-left: auto; flex: 0 0 auto; }
+/* The name link stretches over the whole card, so tapping anywhere opens the product. */
+.pcard-name { color: var(--ink); text-decoration: none; min-width: 0; flex: 1 1 auto; }
+.pcard-name::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.pcard-name:focus-visible { outline: none; }
+.pcard:has(.pcard-name:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }
+.pcard:has(.more-btn[aria-expanded="true"]) { z-index: 5; }
+/* quick actions menu */
+.more { position: relative; z-index: 2; flex: 0 0 auto; margin: -8px -10px -8px -4px; }
+.more-btn { width: 40px; height: 40px; border-radius: 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+.more-btn:hover, .more-btn[aria-expanded="true"] { background: var(--bg); color: var(--ink); }
+.more-menu { position: absolute; right: 0; top: calc(100% + 4px); min-width: 170px; padding: 6px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 12px 32px rgba(0, 0, 0, .16); display: flex; flex-direction: column; z-index: 20; }
+.more-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; color: var(--ink); font: inherit; font-size: 15px; font-weight: 600; text-align: left; cursor: pointer; }
+.more-item:hover, .more-item:focus-visible { background: var(--bg); }
+.more-item[data-danger] { color: var(--loss); }
+.more-item[data-danger]:hover, .more-item[data-danger]:focus-visible { background: var(--loss-soft); }
 .pnums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0; }
 .pnums div { min-width: 0; }
 .pnums dt { font-size: 12px; color: var(--muted); font-weight: 600; }

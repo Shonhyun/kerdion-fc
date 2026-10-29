@@ -5,19 +5,35 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type { Recipe } from '@/lib/types';
 import { calc, delivery, rName } from '@/lib/calc';
-import { applyTemplate, recipe, TEMPLATES } from '@/lib/data';
+import { applyTemplate, dupRecipe, recipe, removeRecipe, TEMPLATES } from '@/lib/data';
 import { peso } from '@/lib/format';
-import { Icon, PageHead, Pager, Pill, useHelp } from '../ui';
+import { Icon, MoreMenu, PageHead, Pager, Pill, useHelp } from '../ui';
 import { showToast, update, useData, useT } from '@/store/store';
 
 function PCard({ r }: { r: Recipe }) {
-  const S = useData(); const L = useT();
+  const S = useData(); const L = useT(); const router = useRouter();
   const z = r.sizes.length ? r.sizes[0] : null;
   const c = calc(S, r, z);
   const mTone = c.pre <= 0 ? 'none' : c.margin >= 25 ? 'good' : c.margin >= 10 ? 'warn' : 'bad';
+  const nm = rName(S, r);
+  const href = '/products/' + r.id;
+  const dup = () => {
+    let id = ''; update((d) => { const rr = d.recipes.find((x) => x.id === r.id); if (rr) id = dupRecipe(d, rr).id; });
+    showToast(L('Copied. Change the name and amounts.', 'Nakopya. Palitan ang pangalan at dami.'));
+    if (id) router.push('/products/' + id + '?new=1');
+  };
+  const del = () => update((d) => { removeRecipe(d, r.id); }, L('Deleted ', 'Binura ang ') + nm);
   return (
-    <Link className="pcard" href={'/products/' + r.id}>
-      <div className="pcard-top"><strong>{rName(S, r)}</strong><Pill tone={mTone}>{c.pre > 0 ? Math.round(c.margin) + '% margin' : L('No price yet', 'Wala pang presyo')}</Pill></div>
+    <div className="pcard">
+      <div className="pcard-top">
+        <Link className="pcard-name" href={href}>{nm}</Link>
+        <Pill tone={mTone}>{c.pre > 0 ? Math.round(c.margin) + '% margin' : L('No price yet', 'Wala pang presyo')}</Pill>
+        <MoreMenu label={L('More actions for ', 'Iba pang gagawin sa ') + nm} items={[
+          { label: L('Edit', 'I-edit'), icon: 'edit', onSelect: () => router.push(href) },
+          { label: L('Duplicate', 'Kopyahin'), icon: 'copy', onSelect: dup },
+          { label: L('Delete', 'Burahin'), icon: 'trash', danger: true, onSelect: del },
+        ]} />
+      </div>
       {r.sizes.length > 0 && <span className="pcard-del">Sizes: {r.sizes.map((s) => (s.name || '?') + ' ' + peso(calc(S, r, s).sell)).join(' · ')}</span>}
       <dl className="pnums">
         <div><dt>{L('Cost', 'Gastos')}</dt><dd>{peso(c.cost)}</dd></div>
@@ -25,8 +41,8 @@ function PCard({ r }: { r: Recipe }) {
         <div><dt>{L('Profit', 'Tubo')}</dt><dd data-tone={c.profit >= 0 ? 'good' : 'bad'}>{peso(c.profit)}</dd></div>
       </dl>
       {S.biz.deliveryOn && r.kind !== 'addon' && <span className="pcard-del">{L('Delivery app price: ', 'Presyo sa delivery app: ')}{delivery(S, c).price ? peso(delivery(S, c).price, 0) : '—'}</span>}
-      <span className="pcard-link">{L('Edit', 'I-edit')}<Icon name="right" size={16} /></span>
-    </Link>
+      <span className="pcard-link" aria-hidden="true">{L('Edit', 'I-edit')}<Icon name="right" size={16} /></span>
+    </div>
   );
 }
 
