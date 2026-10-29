@@ -124,6 +124,7 @@ export default function Shell({ children }: { children: ReactNode }) {
           ) : (
             <div className="save-note"><strong>{L('Saved on this device', 'Naka-save sa device na ito')}</strong>{L('Local mode: connect Supabase to turn on accounts and cloud saving.', 'Local mode: i-connect ang Supabase para sa accounts at cloud saving.')}</div>
           )}
+          <nav className="side-legal" aria-label="Legal"><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Use</Link></nav>
         </div>
       </aside>
       <main className="main"><div className="main-inner">{children}</div></main>

@@ -129,10 +129,12 @@ export default function AuthForm({ mode }: { mode: Mode }) {
             <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
               {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : mode === 'signup' ? 'Create account' : mode === 'forgot' ? 'Send reset link' : 'Save new password'}
             </button>
+            {mode === 'signup' && <p className="help consent">By creating an account, you agree to the <Link href="/terms">Terms of Use</Link> and <Link href="/privacy">Privacy Policy</Link>.</p>}
           </form>
         )}
         {links && <div className="links">{links}</div>}
       </section>
+      <nav className="auth-legal" aria-label="Legal"><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Use</Link></nav>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from '@/lib/supabase/config';
 
 const AUTH_PAGES = ['/login', '/signup', '/forgot-password'];
-const PUBLIC_PAGES = [...AUTH_PAGES, '/reset-password', '/auth/callback'];
+const PUBLIC_PAGES = [...AUTH_PAGES, '/reset-password', '/auth/callback', '/privacy', '/terms'];
 
 export async function middleware(request: NextRequest) {
   // Local mode: no accounts, every page is open.

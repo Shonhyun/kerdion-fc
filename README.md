@@ -86,6 +86,7 @@ src/
     (app)/             dashboard, welcome, products, products/[id], ingredients, expenses,
                        sales, report, daily, combos, export, guide, business
     auth/callback/     handles links from confirmation and reset emails
+    (legal)/           privacy policy and terms of use (public pages)
     globals.css        all styles
   components/          Shell (sidebar and mobile menu), shared UI, one file per screen in views/
   lib/                 calc.ts (all math), data.ts (templates, sample data, sizes), exporters.ts, supabase/
@@ -99,7 +100,7 @@ supabase/schema.sql    table, trigger and Row Level Security policies
 - Only the Supabase **anon** key is used in the app. Never put the `service_role` key in this project or in Vercel environment variables that start with `NEXT_PUBLIC_`.
 - Row Level Security is required. Without it any signed-in user could read other businesses. The schema turns it on.
 - Security headers (HSTS, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`) are set in `next.config.ts`.
-- Business and personal data falls under the Philippine Data Privacy Act of 2012 (RA 10173). Add a privacy notice and terms before a public launch.
+- Business and personal data falls under the Philippine Data Privacy Act of 2012 (RA 10173). The Privacy Policy (`/privacy`) and Terms of Use (`/terms`) live in `src/app/(legal)/`; the operator name, contact email and effective date are in `src/app/(legal)/legal.ts`. Have them reviewed by a lawyer before charging for the app, and update them whenever the app starts collecting something new (payments, analytics).
 
 ## Next phase
 
