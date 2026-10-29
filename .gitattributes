@@ -1,0 +1,7 @@
+# Keep line endings the same everywhere: this working copy, the repository, and the Linux
+# build on Vercel. Without this each contributor's core.autocrlf setting decides, and a
+# checkout on Windows can rewrite every file in the project.
+* text=auto eol=lf
+
+# Design reference screenshots: never convert these.
+*.png binary
