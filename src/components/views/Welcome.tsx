@@ -5,6 +5,7 @@ import { Icon } from '../ui';
 import { applyTemplate, fresh, sample } from '@/lib/data';
 import { focusSoon, num } from '@/lib/format';
 import { afterSetup, getData, replaceData, showToast, update, useData, useT } from '@/store/store';
+import { LogoMark } from '@/components/Logo';
 
 export default function Welcome() {
   const S = useData(); const L = useT();
@@ -43,8 +44,8 @@ export default function Welcome() {
   return (
     <div className="wiz">
       <div className="brand" style={{ gap: 12 }}>
-        <span className="mark" aria-hidden="true" style={{ width: 48, height: 48, fontSize: 26, borderRadius: 14 }}>K</span>
-        <span><span className="brand-name" style={{ fontSize: 30 }}>Kerdion</span><span className="brand-sub">{L('Know your real cost and profit', 'Alamin ang totoong gastos at tubo')}</span></span>
+        <LogoMark size={48} />
+        <span><span className="brand-name" style={{ fontSize: 30 }}>Saffra</span><span className="brand-sub">{L('Know your real cost and profit', 'Alamin ang totoong gastos at tubo')}</span></span>
       </div>
       <div className="wiz-steps" aria-hidden="true"><span className="on" /><span className={step >= 2 ? 'on' : ''} /><span className={step >= 3 ? 'on' : ''} /></div>
       <section className="card">

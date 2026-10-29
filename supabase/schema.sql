@@ -1,4 +1,4 @@
--- Kerdion database schema
+-- Saffra database schema
 -- Run this once in Supabase Dashboard > SQL Editor > New query.
 -- Each account owns exactly one business record. Row Level Security makes sure
 -- a signed-in user can only ever read or change their own record.

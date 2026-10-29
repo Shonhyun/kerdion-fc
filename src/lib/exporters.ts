@@ -16,7 +16,7 @@ const r2 = (n: number) => Math.round(n * 100) / 100;
 
 function rows(S: AppData) {
   const t = totals(S);
-  const sum: (string | number)[][] = [['Kerdion report'], ['Business', S.biz.name || ''], ['Date', todayISO()], ['Days open per month', t.days], [],
+  const sum: (string | number)[][] = [['Saffra report'], ['Business', S.biz.name || ''], ['Date', todayISO()], ['Days open per month', t.days], [],
     ['Total sales per month (PHP)', r2(t.rev)], ['Ingredients and packaging (PHP)', r2(t.cogs)], ['Tax (PHP)', r2(t.tax)], ['Profit before bills (PHP)', r2(t.gross)],
     ['Monthly bills (PHP)', r2(t.fixed)], ['Net profit per month (PHP)', r2(t.net)], ['Net profit per day (PHP)', r2(t.net / t.days)], ['Break-even orders per month', t.avg > 0 ? t.be : 'n/a'], ['Monthly profit goal (PHP)', num(S.goal) || '']];
   const prods: (string | number)[][] = [['Product', 'Type', 'Cost per serving', 'Selling price', 'Profit per order', 'Margin %', 'Food cost %', 'Orders per month', 'Sales per month', 'Profit per month', 'Delivery app price']];
@@ -44,7 +44,7 @@ export async function exportXlsx(S: AppData) {
   const ExcelJS = (await import('exceljs')).default;
   const R = rows(S);
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Kerdion';
+  wb.creator = 'Saffra';
   const sheets: [string, (string | number)[][]][] = [['Summary', R.sum], ['Products', R.prods], ['Recipe details', R.det], ['Ingredients', R.libs], ['Sub-recipes', R.preps], ['Expenses', R.fx], ['Combos', R.cbs], ['Daily sales', R.lg]];
   sheets.forEach(([name, data]) => {
     const ws = wb.addWorksheet(name);
@@ -53,7 +53,7 @@ export async function exportXlsx(S: AppData) {
     ws.columns = (data[0] || []).map((_, i) => ({ width: i === 0 ? 28 : 16 }));
   });
   const buf = await wb.xlsx.writeBuffer();
-  downloadBlob('kerdion-' + todayISO() + '.xlsx', new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+  downloadBlob('saffra-' + todayISO() + '.xlsx', new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
 }
 
 export async function exportPdf(S: AppData) {
@@ -73,7 +73,7 @@ export async function exportPdf(S: AppData) {
     };
     draw(cols, true); body.forEach((r) => draw(r, false)); y += 2;
   };
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text('Kerdion profit report', X, y); y += 7;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.text('Saffra profit report', X, y); y += 7;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.text((S.biz.name || 'My business') + '  ·  ' + todayISO() + '  ·  ' + t.days + ' days open per month', X, y); y += 6;
   h2('Monthly summary');
   const srows: string[][] = [['Total sales', pp(t.rev)], ['Ingredients and packaging', pp(-t.cogs)], ...(S.biz.taxOn ? [['Tax', pp(-t.tax)]] : []), ['Profit before bills', pp(t.gross)], ['Monthly bills', pp(-t.fixed)], ['Net profit per month', pp(t.net)], ['Net profit per day', pp(t.net / t.days)], ['Net profit per year', pp(t.net * 12)], ['Break-even', t.avg > 0 ? int(t.be) + ' orders per month' : 'not reachable']];
@@ -91,10 +91,10 @@ export async function exportPdf(S: AppData) {
     need(12); doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.text(u.name + '  ·  cost ' + pp(uCalc(S, u).cost), X, y); y += 5;
     table(['Item', 'Per serving', 'Cost'], u.r.items.filter((x) => !u.s || num(lineQty(x, u.s)) > 0).map((x) => { const rf = refOf(S, x.ref), c = lineCost(S, x, u.s); return [rf ? rf.name : '(deleted)', num(lineQty(x, u.s)) + ' ' + x.unit, c == null ? 'unit mismatch' : pp(c)]; }), [110, 36, 36], [false, true, true]);
   });
-  doc.setFontSize(8); doc.setFont('helvetica', 'normal'); need(8); doc.text('Estimates based on the numbers entered in Kerdion. Not financial or tax advice.', X, y + 4);
-  downloadBlob('kerdion-report-' + todayISO() + '.pdf', doc.output('blob'));
+  doc.setFontSize(8); doc.setFont('helvetica', 'normal'); need(8); doc.text('Estimates based on the numbers entered in Saffra. Not financial or tax advice.', X, y + 4);
+  downloadBlob('saffra-report-' + todayISO() + '.pdf', doc.output('blob'));
 }
 
 export function exportBackup(S: AppData) {
-  downloadBlob('kerdion-backup-' + todayISO() + '.json', new Blob([JSON.stringify({ ...S, lastBackup: Date.now() }, null, 1)], { type: 'application/json' }));
+  downloadBlob('saffra-backup-' + todayISO() + '.json', new Blob([JSON.stringify({ ...S, lastBackup: Date.now() }, null, 1)], { type: 'application/json' }));
 }

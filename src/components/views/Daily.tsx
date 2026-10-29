@@ -11,7 +11,7 @@ export default function Daily() {
   const S = useData(); const L = useT();
   const [d, setD] = useState(todayISO());
   const t = totals(S); const today = todayISO();
-  const head = <PageHead title={L('Daily sales', 'Benta araw-araw')} lead={L('At the end of each day, enter how many you sold. Kerdion compares your real sales with your plan.', 'Sa dulo ng araw, ilagay kung ilan ang nabenta mo. Ikukumpara ng Kerdion ang totoong benta sa plan mo.')} />;
+  const head = <PageHead title={L('Daily sales', 'Benta araw-araw')} lead={L('At the end of each day, enter how many you sold. Saffra compares your real sales with your plan.', 'Sa dulo ng araw, ilagay kung ilan ang nabenta mo. Ikukumpara ng Saffra ang totoong benta sa plan mo.')} />;
   if (!S.recipes.length) return <>{head}<div className="empty"><strong>{L('Add a product first', 'Mag-add muna ng produkto')}</strong><Link className="btn btn-primary" href="/products">{L('Go to Products', 'Pumunta sa Products')}</Link></div></>;
   const items = logItems(S);
   const setCount = (key: string, v: string) => update((dd) => { if (!dd.log[d]) dd.log[d] = {}; dd.log[d][key] = v.replace(/[^0-9]/g, ''); });

@@ -25,7 +25,7 @@ export default function Export() {
     const rd = new FileReader();
     rd.onload = () => {
       try { const s = JSON.parse(String(rd.result)); if (!isValid(s)) throw new Error('bad'); setRestore(normalize(s)); setMsg(''); }
-      catch { setRestore(null); setMsg(L('That file is not a Kerdion backup.', 'Hindi Kerdion backup ang file na iyan.')); }
+      catch { setRestore(null); setMsg(L('That file is not a Saffra backup.', 'Hindi Saffra backup ang file na iyan.')); }
     };
     rd.readAsText(f);
   };
@@ -38,7 +38,7 @@ export default function Export() {
         <section className="card xcard">
           <span className="x-ic"><Icon name="disk" size={22} /></span>
           <h2 style={{ fontSize: 19 }}>Backup</h2>
-          <p className="help">{L('Save a backup file, or restore one, including backups from the Kerdion preview version.', 'Mag-save ng backup file, o mag-restore, kasama ang backup galing sa Kerdion preview version.')}</p>
+          <p className="help">{L('Save a backup file, or restore one, including backups from the earlier preview version.', 'Mag-save ng backup file, o mag-restore, kasama ang backup galing sa lumang preview version.')}</p>
           <p className="help"><strong>{age < 0 ? L('No backup file yet.', 'Wala pang backup file.') : age === 0 ? L('Last backup: today.', 'Huling backup: ngayon.') : L('Last backup: ', 'Huling backup: ') + age + L(' days ago.', ' araw na ang nakalipas.')}</strong></p>
           <div className="btn-row">
             <button className="btn btn-primary" disabled={!!busy} onClick={() => run('json', () => { exportBackup(S); update((d) => { d.lastBackup = Date.now(); }); })}>{L('Download backup', 'I-download ang backup')}</button>

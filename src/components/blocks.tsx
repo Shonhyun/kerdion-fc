@@ -19,7 +19,7 @@ export function SampleNotice() {
     onYes={() => { afterSetup.path = '/products'; replaceData(fresh(S.lang)); router.replace('/welcome'); }} onNo={() => setConfirm(false)} />;
   return (
     <div className="notice">
-      <div className="txt"><strong>{L('You are looking at sample data.', 'Sample data ang nakikita mo.')}</strong> {L('This is a pretend silog stall so you can see how Kerdion works. Explore it, then start your own.', 'Pretend silog stall lang ito para makita mo kung paano gumagana ang Kerdion. I-explore mo muna, tapos simulan ang sa’yo.')}</div>
+      <div className="txt"><strong>{L('You are looking at sample data.', 'Sample data ang nakikita mo.')}</strong> {L('This is a pretend silog stall so you can see how Saffra works. Explore it, then start your own.', 'Pretend silog stall lang ito para makita mo kung paano gumagana ang Saffra. I-explore mo muna, tapos simulan ang sa’yo.')}</div>
       <div className="acts">
         <button className="btn btn-sm btn-primary" onClick={() => setConfirm(true)}>{L('Set up my business', 'I-set up ang negosyo ko')}</button>
         <button className="btn btn-sm" onClick={() => update((d) => { d.bannerHidden = true; })}>{L('Keep exploring', 'Explore muna')}</button>

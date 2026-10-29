@@ -12,7 +12,7 @@ export default function Home() {
   const t = totals(S); const pr = progress(S);
   const today = S.log[todayISO()]; const td = dayStats(S, todayISO());
   const steps: [keyof typeof pr, number, string, string, string][] = [
-    ['products', 1, L('Add your products', 'I-add ang mga produkto mo'), L('Enter ingredients and packaging. Kerdion computes the cost per serving and a selling price.', 'Ilagay ang sangkap at packaging. Kerdion na ang magko-compute ng cost per serving at selling price.'), '/products'],
+    ['products', 1, L('Add your products', 'I-add ang mga produkto mo'), L('Enter ingredients and packaging. Saffra computes the cost per serving and a selling price.', 'Ilagay ang sangkap at packaging. Saffra na ang magko-compute ng cost per serving at selling price.'), '/products'],
     ['expenses', 2, L('List your monthly bills', 'Ilista ang buwanang bills'), L('Rent, salaries, electricity and other bills you pay every month.', 'Renta, sweldo, kuryente at iba pang binabayaran mo kada buwan.'), '/expenses'],
     ['sales', 3, L('Plan your sales', 'I-plan ang benta mo'), L('Guess how many of each product you sell in a month.', 'Hulaan kung ilan ang mabebenta mo kada buwan.'), '/sales'],
     ['report', 4, L('See your profit', 'Tingnan ang tubo mo'), L('Profit per day, month and year, your break-even and your goal.', 'Tubo kada araw, buwan at taon, break-even at goal mo.'), '/report'],
@@ -21,7 +21,7 @@ export default function Home() {
     <>
       <SampleNotice />
       <BackupNotice local={meta.mode === 'local'} />
-      <PageHead title={S.biz.name ? L('Hi, ', 'Hello, ') + S.biz.name : L('Welcome to Kerdion', 'Welcome sa Kerdion')} lead={L('Here is how your business is doing based on your numbers.', 'Ito ang lagay ng negosyo mo base sa numbers mo.')} />
+      <PageHead title={S.biz.name ? L('Hi, ', 'Hello, ') + S.biz.name : L('Welcome to Saffra', 'Welcome sa Saffra')} lead={L('Here is how your business is doing based on your numbers.', 'Ito ang lagay ng negosyo mo base sa numbers mo.')} />
       <div className="kpis">
         <div className="stat"><span className="k">{L('Net profit per month', 'Net profit kada buwan')}</span><span className="v" data-tone={tone(t.net)}>{peso(t.net, 0)}</span><span className="s">{L('After all costs', 'Bawas na lahat ng gastos')}</span></div>
         <div className="stat"><span className="k">{L('Profit per day', 'Tubo kada araw')}</span><span className="v" data-tone={tone(t.net)}>{peso(t.net / t.days, 0)}</span><span className="s">{L('Open ', 'Bukas ') + t.days + L(' days a month', ' araw kada buwan')}</span></div>

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { progress } from '@/lib/calc';
 import { Icon } from './ui';
 import { signOut, undoLast, update, useData, useMeta, useT, useToast } from '@/store/store';
+import { LogoMark } from '@/components/Logo';
 
 type Theme = 'light' | 'dark' | 'auto';
 function readTheme(): Theme { try { const t = localStorage.getItem('kerdion-theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch { return 'auto'; } }
@@ -71,7 +72,7 @@ export default function Shell({ children }: { children: ReactNode }) {
   return (
     <div className={'app' + (open ? ' nav-open' : '')}>
       <header className="mtop">
-        <Link className="brand" href="/dashboard"><span className="mark" aria-hidden="true">K</span><span className="brand-name">Kerdion</span></Link>
+        <Link className="brand" href="/dashboard"><LogoMark /><span className="brand-name">Saffra</span></Link>
         <div className="mtop-right">
           <SyncLabel />
           <button ref={menuBtn} className="menu-btn" aria-expanded={open} aria-controls="side" onClick={() => setOpen(true)}><Icon name="menu" />Menu</button>
@@ -80,7 +81,7 @@ export default function Shell({ children }: { children: ReactNode }) {
       <div className="scrim" onClick={() => { setOpen(false); menuBtn.current?.focus(); }} />
       <aside className="side" id="side" aria-label="Main menu">
         <div className="side-head">
-          <Link className="brand" href="/dashboard"><span className="mark" aria-hidden="true">K</span><span><span className="brand-name">Kerdion</span><span className="brand-sub">{L('Food costing and profit', 'Food costing at tubo')}</span></span></Link>
+          <Link className="brand" href="/dashboard"><LogoMark /><span><span className="brand-name">Saffra</span><span className="brand-sub">{L('Food costing and profit', 'Food costing at tubo')}</span></span></Link>
           <button ref={closeBtn} className="close-btn" aria-label={L('Close menu', 'Isara ang menu')} onClick={() => { setOpen(false); menuBtn.current?.focus(); }}><Icon name="x" /></button>
         </div>
         <nav className="nav" aria-label="Pages">

@@ -1,8 +1,8 @@
 {
-  "name": "kerdion",
+  "name": "saffra",
   "version": "0.1.0",
   "private": true,
-  "description": "Kerdion: food costing and profit planner for small food businesses",
+  "description": "Saffra: food costing and profit planner for small food businesses",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",

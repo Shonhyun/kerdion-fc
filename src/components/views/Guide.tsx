@@ -16,7 +16,7 @@ export default function Guide() {
   const words: [string, string][] = [['Usable %', 'usable'], ['Sub-recipe', 'prep'], ['Sizes', 'sizes'], ['Add-ons', 'addon'], ['Profit margin', 'margin'], ['Food cost', 'food'], [L('Delivery app price', 'Presyo sa delivery app'), 'delivery'], ['Break-even', 'be'], ['Price rounding', 'round']];
   return (
     <>
-      <PageHead title={L('How to use Kerdion', 'Paano gamitin ang Kerdion')} lead={L('Kerdion (from the Greek word for gain) helps you find your real cost per order, the right selling price and how much you earn each month. No spreadsheet skills needed.', 'Ang Kerdion (galing sa Greek na salita para sa tubo) ay tumutulong malaman ang totoong cost per order, tamang presyo at kita mo kada buwan. Hindi kailangan marunong sa spreadsheet.')} />
+      <PageHead title={L('How to use Saffra', 'Paano gamitin ang Saffra')} lead={L('Saffra (named after saffron, the most valuable spice in the world: a small ingredient with real value) helps you find your real cost per order, the right selling price and how much you earn each month. No spreadsheet skills needed.', 'Ang Saffra (galing sa saffron, ang pinakamahal na spice sa mundo: maliit na sangkap, malaking value) ay tumutulong malaman ang totoong cost per order, tamang presyo at kita mo kada buwan. Hindi kailangan marunong sa spreadsheet.')} />
       <ol className="gsteps">
         {steps.map(([href, n, title, desc, label]) => (
           <li key={href}><span className="dot">{n}</span><h3>{title}</h3><p>{desc}</p><Link href={href}>{L('Go to ', 'Pumunta sa ')}{label}<Icon name="right" size={16} /></Link></li>

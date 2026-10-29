@@ -1,10 +1,10 @@
-# Kerdion
+# Saffra
 
 Food costing and profit planner for small food businesses: coffee shops, milk tea shops, silog stalls, bakeries and more.
-Owners enter what they buy and what goes into each product, and Kerdion shows the real cost per order, a suggested selling price,
+Owners enter what they buy and what goes into each product, and Saffra shows the real cost per order, a suggested selling price,
 and the profit per day, month and year.
 
-*Kerdion* comes from the Greek *kérdos* (κέρδος), "gain".
+*Saffra* is named after saffron, the most valuable spice in the world: a small ingredient with real value. Brand files (logo, icon, app icon) are in [`brand/`](brand).
 
 ## Features
 
@@ -42,7 +42,7 @@ If the Supabase environment variables are missing, the app runs in **local mode*
 1. Create a project at [supabase.com](https://supabase.com). Choose the **Southeast Asia (Singapore)** region, the closest to the Philippines.
 2. Open **SQL Editor → New query**, paste the contents of [`supabase/schema.sql`](supabase/schema.sql) and run it.
 3. Open **Authentication → URL Configuration**:
-   - **Site URL**: your app address, for example `https://kerdion.vercel.app` (use `http://localhost:3000` while developing).
+   - **Site URL**: your app address, for example `https://saffra.vercel.app` (use `http://localhost:3000` while developing).
    - **Redirect URLs**: add `http://localhost:3000/auth/callback` and `https://YOUR-DOMAIN/auth/callback`.
 4. Open **Authentication → Sign In / Providers → Email**. "Confirm email" is on by default, which means new users must click the link in their email before signing in. Keep it on for production.
 5. Open **Project Settings → API** and copy the **Project URL** and the **anon public** key.
@@ -76,7 +76,6 @@ Open http://localhost:3000. You will be sent to the sign-in page.
 | `npm run build` | Production build |
 | `npm start` | Run the production build |
 | `npm run typecheck` | TypeScript check |
-| `npm run lint` | ESLint (`next/core-web-vitals` + `next/typescript`) |
 
 ## Project structure
 

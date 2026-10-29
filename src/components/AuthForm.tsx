@@ -5,14 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, type ReactNode } from 'react';
 import { getSupabase } from '@/lib/supabase/client';
 import { isSupabaseConfigured, siteUrl } from '@/lib/supabase/config';
+import { LogoMark } from '@/components/Logo';
 
 type Mode = 'login' | 'signup' | 'forgot' | 'reset';
 
 function Brand() {
   return (
     <div className="brand" style={{ gap: 12 }}>
-      <span className="mark" aria-hidden="true" style={{ width: 48, height: 48, fontSize: 26, borderRadius: 14 }}>K</span>
-      <span><span className="brand-name" style={{ fontSize: 30 }}>Kerdion</span><span className="brand-sub">Know your real cost and profit</span></span>
+      <LogoMark size={48} />
+      <span><span className="brand-name" style={{ fontSize: 30 }}>Saffra</span><span className="brand-sub">Know your real cost and profit</span></span>
     </div>
   );
 }
@@ -53,7 +54,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
       <div className="auth"><Brand />
         <section className="card">
           <h1>Accounts are not set up yet</h1>
-          <p className="lead">Supabase is not connected, so Kerdion is running in local mode. Your data is saved in this browser only.</p>
+          <p className="lead">Supabase is not connected, so Saffra is running in local mode. Your data is saved in this browser only.</p>
           <Link className="btn btn-primary btn-block" href="/dashboard">Continue in local mode</Link>
         </section>
       </div>

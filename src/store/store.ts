@@ -18,6 +18,7 @@ export interface Meta {
 }
 export interface ToastState { id: number; msg: string; undo: AppData | null; show: boolean }
 
+// Keys keep the old 'kerdion-' prefix (the app's first name) so existing saved data and caches still load.
 const LOCAL_KEY = 'kerdion-v3';
 const OLD_KEYS = ['tubo-food-costing-v2', 'tubo-food-costing-v1'];
 

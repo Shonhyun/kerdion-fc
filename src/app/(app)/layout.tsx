@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
   if (!ready || (needsSetup && path !== '/welcome') || (!needsSetup && path === '/welcome')) {
-    return <div className="loading" role="status">Loading Kerdion…</div>;
+    return <div className="loading" role="status">Loading Saffra…</div>;
   }
   return <Shell>{children}</Shell>;
 }
