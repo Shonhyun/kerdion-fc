@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import SiteAnalytics from '@/components/SiteAnalytics';
 
 export const metadata: Metadata = {
   title: { default: 'Saffra', template: '%s · Saffra' },
@@ -31,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" />
       </head>
-      <body>{children}</body>
+      <body>{children}<SiteAnalytics /></body>
     </html>
   );
 }

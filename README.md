@@ -23,7 +23,7 @@ and the profit per day, month and year.
 - Supabase: Auth and Postgres with Row Level Security
 - Plain CSS (`src/app/globals.css`), the same design as the HTML preview
 - `immer` for state updates, `exceljs` and `jspdf` for exports (loaded only when a user exports)
-- Deploys on Vercel
+- Deploys on Vercel, with Vercel Web Analytics for anonymous, cookie-free visit counts (turn it on in the Vercel project under **Analytics → Enable**)
 
 ## How data is stored
 

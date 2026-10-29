@@ -20,7 +20,7 @@ export default function PrivacyPage() {
       <ul>
         <li>We collect only what Saffra needs to work: your email, your password (stored scrambled), your business name and the business numbers you type in.</li>
         <li>Your business data is private to your account. Other users cannot see it.</li>
-        <li>We do not sell your data, show ads, or use advertising or analytics trackers.</li>
+        <li>We do not sell your data or show ads. We only count visits anonymously, without cookies, to see how Saffra is used.</li>
         <li>You can download your data any time and ask us to delete your account.</li>
       </ul>
 
@@ -35,6 +35,7 @@ export default function PrivacyPage() {
       <ul>
         <li><strong>Sign-in cookies:</strong> small cookies that keep you signed in. They are required for the app to work and are not used for tracking.</li>
         <li><strong>Data saved in your browser:</strong> a copy of your business data, so the app opens quickly and keeps unsaved changes if your connection drops, plus your Light/Dark choice. It stays on your device until you sign out or clear your browser.</li>
+        <li><strong>Anonymous visit statistics:</strong> Vercel Web Analytics records which pages are visited, the referring website, your approximate location (country, region, city) and your device and browser type. It does not use cookies, it is not linked to your account or your business data, and we remove anything after the &ldquo;?&rdquo; in a page address before it is sent.</li>
         <li><strong>Technical logs:</strong> our hosting and database providers automatically record basic request details, such as IP address, browser type and time, to run and secure their services.</li>
       </ul>
       <p>We do not collect payment details. Saffra is free during the beta.</p>
@@ -44,7 +45,7 @@ export default function PrivacyPage() {
         <li>To run Saffra: compute your costs, prices and profit, and save and sync your data across your devices.</li>
         <li>To send account emails, such as sign-up confirmation and password reset links.</li>
         <li>To keep Saffra secure, prevent abuse and fix problems.</li>
-        <li>To improve Saffra, using the feedback you choose to send us.</li>
+        <li>To improve Saffra, using the feedback you choose to send us and anonymous visit statistics, for example which pages are used most.</li>
       </ul>
       <p>We do not use your business numbers for anything else, and we do not sell, rent or trade your information.</p>
 
@@ -52,7 +53,7 @@ export default function PrivacyPage() {
       <p>We use a few trusted service providers to run Saffra. They process data only to provide their service to us:</p>
       <ul>
         <li><strong>Supabase</strong>: account sign-in, account emails and the database that stores your business data.</li>
-        <li><strong>Vercel</strong>: hosting of the web app.</li>
+        <li><strong>Vercel</strong>: hosting of the web app and anonymous visit statistics (Vercel Web Analytics).</li>
         <li><strong>Google Fonts</strong>: the app&rsquo;s fonts load from Google&rsquo;s servers, which receive your IP address when the page loads.</li>
       </ul>
       <p>These providers may store data on servers outside the Philippines. We may also share information if the law requires it.</p>
