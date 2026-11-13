@@ -33,7 +33,7 @@ set search_path = public
 as $$
   select exists (select 1 from public.admins where user_id = (select auth.uid()));
 $$;
-revoke all on function public.is_admin() from public;
+revoke all on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated;
 
 -- ---------- subscriptions ----------
@@ -111,6 +111,7 @@ begin
   return new;
 end;
 $$;
+revoke all on function public.payment_requests_fill_email() from public, anon, authenticated;
 drop trigger if exists payment_requests_fill_email on public.payment_requests;
 create trigger payment_requests_fill_email
 before insert on public.payment_requests
@@ -210,10 +211,10 @@ begin
 end;
 $$;
 
-revoke all on function public.approve_payment(uuid) from public;
-revoke all on function public.reject_payment(uuid, text) from public;
-revoke all on function public.set_tester(uuid, boolean) from public;
-revoke all on function public.admin_list_accounts() from public;
+revoke all on function public.approve_payment(uuid) from public, anon;
+revoke all on function public.reject_payment(uuid, text) from public, anon;
+revoke all on function public.set_tester(uuid, boolean) from public, anon;
+revoke all on function public.admin_list_accounts() from public, anon;
 grant execute on function public.approve_payment(uuid) to authenticated;
 grant execute on function public.reject_payment(uuid, text) to authenticated;
 grant execute on function public.set_tester(uuid, boolean) to authenticated;
