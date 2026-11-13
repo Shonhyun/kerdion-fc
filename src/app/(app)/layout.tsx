@@ -14,7 +14,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   useEffect(() => { initStore(); }, []);
 
   const ready = meta.phase === 'ready' && !!S;
-  const needsSetup = ready && !S.onboarded;
+  // The admin and billing pages work before the quick setup, so an admin account can go straight to them.
+  const setupFree = path === '/admin' || path === '/upgrade';
+  const needsSetup = ready && !S.onboarded && !setupFree;
   useEffect(() => {
     if (!ready) return;
     if (needsSetup && path !== '/welcome') router.replace('/welcome');
