@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { comboCalc, getC, getUnit, totals, uCalc, units } from '@/lib/calc';
+import { comboCalc, getC, getUnit, totals, uCalc, units, activeCombos } from '@/lib/calc';
 import { int, num, peso, tone } from '@/lib/format';
 import { PageHead, Pager } from '../ui';
 import { update, useData, useT } from '@/store/store';
@@ -50,7 +50,7 @@ export default function Sales() {
   if (!S.recipes.length) return <>{head}<div className="empty"><strong>{L('Add a product first', 'Mag-add muna ng produkto')}</strong><Link className="btn btn-primary" href="/products">{L('Go to Products', 'Pumunta sa Products')}</Link></div><Pager prev={['/expenses', 'Expenses']} /></>;
   const mk = (kind: 'product' | 'addon'): Card[] => units(S, kind).map((u) => { const c = uCalc(S, u); return { key: u.key, name: u.name, orders: u.s ? u.s.orders : u.r.orders, kind: 'unit', addon: kind === 'addon', sell: c.sell, profit: c.profit }; });
   const main = mk('product'), adds = mk('addon');
-  const cbs: Card[] = S.combos.map((cb) => { const c = comboCalc(S, cb); return { key: cb.id, name: cb.name || 'Combo', orders: cb.orders, kind: 'combo', sell: c.sell, profit: c.profit }; });
+  const cbs: Card[] = activeCombos(S).map((cb) => { const c = comboCalc(S, cb); return { key: cb.id, name: cb.name || 'Combo', orders: cb.orders, kind: 'combo', sell: c.sell, profit: c.profit }; });
   return (
     <>
       {head}

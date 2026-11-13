@@ -5,7 +5,9 @@ import type { AppData } from '@/lib/types';
 import { isValid, normalize } from '@/lib/data';
 import { exportBackup, exportPdf, exportXlsx } from '@/lib/exporters';
 import { ConfirmBox, Icon, PageHead } from '../ui';
-import { replaceData, update, useData, useMeta, useT } from '@/store/store';
+import { openUpgrade, replaceData, update, useData, useMeta, useT } from '@/store/store';
+import { isPro } from '@/lib/plan';
+import { ProBadge } from '../Pro';
 
 export default function Export() {
   const S = useData(); const L = useT(); const meta = useMeta();
@@ -49,15 +51,15 @@ export default function Export() {
         </section>
         <section className="card xcard">
           <span className="x-ic"><Icon name="sheet" size={22} /></span>
-          <h2 style={{ fontSize: 19 }}>Excel workbook</h2>
+          <h2 style={{ fontSize: 19 }}>Excel workbook {!isPro() && <ProBadge />}</h2>
           <p className="help">{L('All your data in sheets: summary, products, recipe details, ingredients, sub-recipes, expenses, combos and daily sales.', 'Lahat ng data mo in sheets: summary, products, recipe details, sangkap, sub-recipes, bayarin, combos at daily sales.')}</p>
-          <button className="btn btn-primary" disabled={!!busy} onClick={() => run('xlsx', () => exportXlsx(S))}>{busy === 'xlsx' ? L('Preparing…', 'Inihahanda…') : L('Download .xlsx', 'I-download ang .xlsx')}</button>
+          <button className="btn btn-primary" disabled={!!busy} onClick={() => isPro() ? run('xlsx', () => exportXlsx(S)) : openUpgrade('export')}>{busy === 'xlsx' ? L('Preparing…', 'Inihahanda…') : L('Download .xlsx', 'I-download ang .xlsx')}</button>
         </section>
         <section className="card xcard">
           <span className="x-ic"><Icon name="pdf" size={22} /></span>
-          <h2 style={{ fontSize: 19 }}>PDF report</h2>
+          <h2 style={{ fontSize: 19 }}>PDF report {!isPro() && <ProBadge />}</h2>
           <p className="help">{L('A clean summary you can print or send to a partner, lender or investor.', 'Malinis na summary na pwedeng i-print o i-send sa partner, lender o investor.')}</p>
-          <button className="btn btn-primary" disabled={!!busy} onClick={() => run('pdf', () => exportPdf(S))}>{busy === 'pdf' ? L('Preparing…', 'Inihahanda…') : L('Download PDF', 'I-download ang PDF')}</button>
+          <button className="btn btn-primary" disabled={!!busy} onClick={() => isPro() ? run('pdf', () => exportPdf(S)) : openUpgrade('export')}>{busy === 'pdf' ? L('Preparing…', 'Inihahanda…') : L('Download PDF', 'I-download ang PDF')}</button>
         </section>
       </div>
       <p className="status" role="status">{msg}</p>

@@ -6,6 +6,7 @@ import type { AppData } from '@/lib/types';
 import { fresh, isValid, migrateV1, normalize } from '@/lib/data';
 import { makeL } from '@/lib/format';
 import { getSupabase } from '@/lib/supabase/client';
+import { FREE_ENT, entIsPro, setPro, type Billing, type Ent } from '@/lib/plan';
 
 export type SaveState = 'saved' | 'saving' | 'offline' | 'error' | 'conflict';
 export interface Meta {
@@ -25,6 +26,9 @@ const OLD_KEYS = ['tubo-food-costing-v2', 'tubo-food-costing-v1'];
 let data: AppData | null = null;
 let meta: Meta = { phase: 'loading', mode: 'local', save: 'saved', email: '', userId: '', error: '' };
 let toast: ToastState = { id: 0, msg: '', undo: null, show: false };
+let ent: Ent = FREE_ENT;
+export type UpgradeReason = 'products' | 'preps' | 'export' | 'delivery' | 'alerts' | 'combos' | 'daily' | 'competitor' | 'plan';
+let upgrade: { open: boolean; reason: UpgradeReason } = { open: false, reason: 'plan' };
 const subs = new Set<() => void>();
 const emit = () => subs.forEach((f) => f());
 const subscribe = (f: () => void) => { subs.add(f); return () => { subs.delete(f); }; };
@@ -33,6 +37,11 @@ export function useData(): AppData { return useSyncExternalStore(subscribe, () =
 export function useMeta(): Meta { return useSyncExternalStore(subscribe, () => meta, () => meta); }
 export function useToast(): ToastState { return useSyncExternalStore(subscribe, () => toast, () => toast); }
 export function useT() { return makeL(useData().lang); }
+export function useEnt(): Ent { return useSyncExternalStore(subscribe, () => ent, () => ent); }
+export function useUpgrade() { return useSyncExternalStore(subscribe, () => upgrade, () => upgrade); }
+/** Shows the Pro offer. Call it whenever a free account reaches a limit or taps a Pro feature. */
+export function openUpgrade(reason: UpgradeReason = 'plan') { upgrade = { open: true, reason }; emit(); }
+export function closeUpgrade() { upgrade = { ...upgrade, open: false }; emit(); }
 export function getData(): AppData { return data as AppData; }
 /** Where to go right after the quick setup finishes. */
 export const afterSetup = { path: '/dashboard' };
@@ -62,6 +71,44 @@ export function undoLast() {
   const prev = toast.undo;
   toast = { ...toast, show: false, undo: null };
   replaceData(prev);
+}
+
+// ---------- plan ----------
+const planKey = () => 'saffra-plan-' + meta.userId;
+
+/** Opens or closes Pro features to match the plan. Locked items re-render, nothing is saved. */
+function applyGate() {
+  const changed = setPro(meta.mode === 'local' || entIsPro(ent));
+  if (changed && data) data = { ...data };
+  emit();
+}
+function setEnt(e: Ent) {
+  ent = e;
+  try { localStorage.setItem(planKey(), JSON.stringify(e)); } catch { /* ignore */ }
+  applyGate();
+}
+
+/** Loads this account's plan from Supabase. Users can read it but never change it. */
+let lastPlanFetch = 0;
+export async function refreshPlan(force = true) {
+  const sb = getSupabase(); if (!sb || !meta.userId) return;
+  if (!force && Date.now() - lastPlanFetch < 60 * 1000) return;
+  lastPlanFetch = Date.now();
+  const [sub, adm] = await Promise.all([
+    sb.from('subscriptions').select('plan, billing, current_period_start, current_period_end, is_tester').eq('user_id', meta.userId).maybeSingle(),
+    sb.from('admins').select('user_id').eq('user_id', meta.userId).maybeSingle(),
+  ]);
+  if (sub.error) return; // offline or not set up yet: keep the last known plan
+  const r = sub.data;
+  setEnt({
+    loaded: true,
+    plan: r?.plan === 'pro' ? 'pro' : 'free',
+    billing: (r?.billing as Billing) || null,
+    periodStart: r?.current_period_start || null,
+    periodEnd: r?.current_period_end || null,
+    tester: !!r?.is_tester,
+    admin: !adm.error && !!adm.data,
+  });
 }
 
 // ---------- persistence ----------
@@ -143,7 +190,9 @@ export async function initStore() {
       }
     } catch { /* ignore */ }
     data = d || fresh();
+    ent = { ...FREE_ENT, loaded: true };
     setMeta({ phase: 'ready', mode: 'local', save: 'saved' });
+    applyGate();
     return;
   }
 
@@ -152,6 +201,15 @@ export async function initStore() {
   if (!user) { window.location.href = '/login'; return; }
   meta = { ...meta, mode: 'cloud', userId: user.id, email: user.email || '' };
 
+  // Free until the plan is known. The last plan seen on this device is used right away, so a
+  // Pro account does not flash its products as locked; the server copy then replaces it.
+  try { const c = JSON.parse(localStorage.getItem(planKey()) || 'null'); if (c && typeof c === 'object') ent = { ...FREE_ENT, ...c }; } catch { /* ignore */ }
+  setPro(entIsPro(ent));
+  const planLoad = refreshPlan();
+  // A Pro period can end while the app is open.
+  setInterval(applyGate, 60 * 1000);
+  window.addEventListener('focus', () => { refreshPlan(false); });
+
   // Show the last copy on this device right away, then check the cloud.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let cached: { data: any; version: number; dirty: boolean } | null = null;
@@ -159,6 +217,7 @@ export async function initStore() {
   if (cached) { data = normalize(cached.data); version = cached.version || 0; setMeta({ phase: 'ready', save: cached.dirty ? 'saving' : 'saved' }); }
 
   const { data: row, error } = await sb.from('businesses').select('data, version').eq('owner_id', user.id).maybeSingle();
+  await planLoad;
   if (error) {
     if (data) { setMeta({ save: 'offline' }); dirty = !!cached?.dirty; return; }
     setMeta({ phase: 'error', error: error.message });

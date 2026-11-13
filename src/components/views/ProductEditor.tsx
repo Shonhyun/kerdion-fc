@@ -8,7 +8,9 @@ import { alertText, calc, commitLib, curSize, delivery, getLib, getR, lineCost, 
 import { dupRecipe, removeRecipe, newLib, newLine, sizeAdd, sizeDel, sizesOn } from '@/lib/data';
 import { focusSoon, num, pct, peso } from '@/lib/format';
 import { Icon, Peso, Pill, Suffix, UnitSelect, useHelp } from '../ui';
-import { getData, showToast, update, useData, useT } from '@/store/store';
+import { getData, openUpgrade, showToast, update, useData, useT } from '@/store/store';
+import { canAddProducts, deliveryOn, isLocked, isPro, lockedPreps } from '@/lib/plan';
+import { ProLock } from '../Pro';
 
 type Tab = 'ing' | 'pack' | 'price';
 
@@ -16,7 +18,8 @@ type Tab = 'ing' | 'pack' | 'price';
 export function commitPrice(lid: string) {
   let a: ReturnType<typeof commitLib> = null;
   update((d) => { const l = getLib(d, lid); if (l) a = commitLib(d, l); });
-  if (a) { const tx = alertText(getData(), a); showToast(tx.title + '. ' + tx.body); }
+  // Price alerts are a Pro feature. The history is still recorded, so alerts show once on Pro.
+  if (a && isPro()) { const tx = alertText(getData(), a); showToast(tx.title + '. ' + tx.body); }
 }
 
 export function LibFields({ lid, prefix }: { lid: string; prefix: string }) {
@@ -116,7 +119,8 @@ function AddRow({ r, cat }: { r: Recipe; cat: 'ing' | 'pack' }) {
   const S = useData(); const L = useT();
   const used = r.items.map((x) => x.ref);
   const opts = S.library.filter((l) => l.cat === cat && !used.includes(l.id)).sort((a, b) => a.name.localeCompare(b.name));
-  const preps = cat === 'ing' ? S.preps.filter((p) => !used.includes(p.id)) : [];
+  const lp = lockedPreps(S);
+  const preps = cat === 'ing' ? S.preps.filter((p) => !used.includes(p.id) && !lp.has(p.id)) : [];
   const addNew = () => {
     const l = newLib(cat); let xid = '';
     update((d) => { d.library.push(l); const rr = getR(d, r.id); if (rr) xid = newLine(rr, l.id, cat === 'pack' ? 1 : '', cat === 'pack' ? 'pc' : 'g').id; });
@@ -235,12 +239,13 @@ function PricePanel({ r, cs, setTab }: { r: Recipe; cs: Size | null; setTab: (t:
             <div className="field"><label htmlFor={r.id + '-price'}>{L('Your selling price', 'Selling price mo')}{S.biz.taxOn ? L(' (with tax)', ' (may tax na)') : ''}</label>
               <Peso id={r.id + '-price'} value={r.price} onChange={(v) => setR('price', v)} /><p className="help">{L('This is the price customers pay.', 'Ito ang babayaran ng customer.')}</p></div>
           )}
+          {!isPro() ? <ProLock reason="competitor" title={L('Competitor price check', 'Paghambing sa presyo ng iba')}>{L('See if you are cheaper or more expensive than nearby stores.', 'Makita kung mas mura o mas mahal ka sa ibang tindahan.')}</ProLock> :
           <div className="field"><label htmlFor={r.id + '-bench'}>{L('What do nearby stores charge? (optional)', 'Magkano sa ibang tindahan? (optional)')}{cs ? ' · ' + cs.name : ''}</label>
             <Peso id={r.id + '-bench'} value={r.benchmark} placeholder={L('e.g. 110', 'hal. 110')} onChange={(v) => setR('benchmark', v)} />
             {bench > 0 && c.sell > 0
               ? <Pill tone={c.sell - bench <= 0.004 ? 'good' : 'bad'} style={{ alignSelf: 'flex-start' }}>{c.sell - bench <= 0.004 ? L('Good: ', 'Ayos: ') + peso(bench - c.sell) + L(' cheaper than them', ' mas mura sa kanila') : peso(c.sell - bench) + L(' more expensive than them', ' mas mahal sa kanila')}</Pill>
               : <Pill tone="none" style={{ alignSelf: 'flex-start' }}>{L('Compare with a competitor’s price', 'Ikumpara sa presyo ng iba')}</Pill>}
-          </div>
+          </div>}
         </div>
         <div className="stack">
           <div className="price-hero"><span className="k">{L('Customers pay', 'Babayaran ng customer')}{cs ? ' · ' + cs.name : ''}</span><span className="big">{peso(c.sell)}</span>
@@ -259,14 +264,15 @@ function PricePanel({ r, cs, setTab }: { r: Recipe; cs: Size | null; setTab: (t:
               {r.sizes.map((s) => { const cz = calc(S, r, s); return <div key={s.id}><span>{s.name || '?'}</span><span className="v" data-tone={cz.profit >= 0 ? 'good' : 'bad'}>{peso(cz.cost) + ' · ' + peso(cz.sell) + ' · ' + peso(cz.profit)}</span></div>; })}
             </div>
           )}
-          {S.biz.deliveryOn && !isA && (
+          {deliveryOn(S) && !isA && (
             <div className="deliv"><h3><Icon name="scooter" />{L('Delivery app price', 'Presyo sa delivery app')}{cs ? ' · ' + cs.name : ''}{hDel.btn}</h3>{hDel.text}
               <span className="big2">{dv.price ? peso(dv.price, 0) : '—'}</span>
               <p className="help">{L('With a ', 'Sa ') + num(S.biz.deliveryRate) + L('% app commission, this keeps your profit at ', '% na commission, pareho pa rin ang tubo mo: ') + peso(c.profit) + ' per order.'}</p>
               <p className="help">{L('If you use the same price on the app, your profit is ', 'Kung parehong presyo sa app, ang tubo mo ay ') + peso(dv.same) + ' per order.'}</p>
             </div>
           )}
-          {!S.biz.deliveryOn && !isA && <p className="help">{L('Selling on GrabFood or foodpanda? Turn on delivery pricing in ', 'Nagbebenta sa GrabFood o foodpanda? I-on ang delivery pricing sa ')}<Link href="/business">Business info</Link>.</p>}
+          {!isPro() && !isA && <ProLock reason="delivery" title={L('Delivery app price', 'Presyo sa delivery app')}>{L('The price to charge on GrabFood or foodpanda so you keep the same profit after commission.', 'Ang presyo sa GrabFood o foodpanda para pareho pa rin ang tubo mo kahit may commission.')}</ProLock>}
+          {isPro() && !S.biz.deliveryOn && !isA && <p className="help">{L('Selling on GrabFood or foodpanda? Turn on delivery pricing in ', 'Nagbebenta sa GrabFood o foodpanda? I-on ang delivery pricing sa ')}<Link href="/business">Business info</Link>.</p>}
           <p className="help">{S.biz.taxOn ? L('Tax is on at ', 'Naka-on ang tax: ') + S.biz.taxRate + '%.' : L('Tax is off.', 'Naka-off ang tax.')} {L('Change this in ', 'Palitan sa ')}<Link href="/business">Business info</Link>.</p>
         </div>
       </div>
@@ -286,6 +292,11 @@ export default function ProductEditor({ id }: { id: string }) {
   const r = getR(S, id);
   useEffect(() => { if (params.get('new') === '1') focusSoon(id + '-name'); }, [id, params]);
 
+  if (r && isLocked(S, r.id)) {
+    return <div className="empty"><span className="pro-lock-ic"><Icon name="lock" size={20} /></span><strong>{rName(S, r) + L(' is locked', ' ay naka-lock')}</strong>
+      <p>{L('The free plan includes 5 products. This one is saved and safe, and it unlocks as soon as you go Pro.', 'Hanggang 5 products lang ang free plan. Naka-save at safe ito, at ma-u-unlock agad pag nag-Pro ka.')}</p>
+      <div className="btn-row" style={{ justifyContent: 'center' }}><button className="btn btn-yolk" onClick={() => openUpgrade('products')}>{L('See Pro plans', 'Tingnan ang Pro')}</button><Link className="btn" href="/products">{L('Back to products', 'Balik sa products')}</Link></div></div>;
+  }
   if (!r) {
     return <div className="empty"><strong>{L('This product was not found', 'Hindi nakita ang produktong ito')}</strong><Link className="btn btn-primary" href="/products">{L('Back to products', 'Balik sa products')}</Link></div>;
   }
@@ -306,6 +317,7 @@ export default function ProductEditor({ id }: { id: string }) {
     router.push('/products');
   };
   const dup = () => {
+    if (!isA && !canAddProducts(S)) { openUpgrade('products'); return; }
     let nid = ''; update((d) => { const rr = getR(d, r.id); if (rr) nid = dupRecipe(d, rr).id; });
     showToast(L('Copied. Change the name and amounts.', 'Nakopya. Palitan ang pangalan at dami.'));
     router.push('/products/' + nid + '?new=1');

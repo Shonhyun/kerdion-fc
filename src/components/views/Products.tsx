@@ -8,9 +8,30 @@ import { calc, delivery, rName } from '@/lib/calc';
 import { applyTemplate, dupRecipe, recipe, removeRecipe, TEMPLATES } from '@/lib/data';
 import { peso } from '@/lib/format';
 import { Icon, MoreMenu, PageHead, Pager, Pill, useHelp } from '../ui';
-import { showToast, update, useData, useT } from '@/store/store';
+import { openUpgrade, showToast, update, useData, useT } from '@/store/store';
+import { canAddProducts, deliveryOn, isLocked } from '@/lib/plan';
+import { PlanNotice, ProductMeter } from '../Pro';
+
+function LockedCard({ r }: { r: Recipe }) {
+  const S = useData(); const L = useT();
+  return (
+    <div className="pcard locked" aria-disabled="true">
+      <div className="pcard-top">
+        <span className="pcard-name">{rName(S, r)}</span>
+        <span className="lock-tag"><Icon name="lock" size={14} />{L('Locked', 'Naka-lock')}</span>
+      </div>
+      <span className="pcard-del">{L('Saved and safe. It unlocks with Pro.', 'Naka-save at safe. Ma-u-unlock ito sa Pro.')}</span>
+    </div>
+  );
+}
 
 function PCard({ r }: { r: Recipe }) {
+  const S = useData();
+  if (isLocked(S, r.id)) return <LockedCard r={r} />;
+  return <OpenCard r={r} />;
+}
+
+function OpenCard({ r }: { r: Recipe }) {
   const S = useData(); const L = useT(); const router = useRouter();
   const z = r.sizes.length ? r.sizes[0] : null;
   const c = calc(S, r, z);
@@ -18,6 +39,7 @@ function PCard({ r }: { r: Recipe }) {
   const nm = rName(S, r);
   const href = '/products/' + r.id;
   const dup = () => {
+    if (r.kind !== 'addon' && !canAddProducts(S)) { openUpgrade('products'); return; }
     let id = ''; update((d) => { const rr = d.recipes.find((x) => x.id === r.id); if (rr) id = dupRecipe(d, rr).id; });
     showToast(L('Copied. Change the name and amounts.', 'Nakopya. Palitan ang pangalan at dami.'));
     if (id) router.push('/products/' + id + '?new=1');
@@ -40,7 +62,7 @@ function PCard({ r }: { r: Recipe }) {
         <div><dt>{L('Price', 'Presyo')}</dt><dd>{peso(c.sell)}</dd></div>
         <div><dt>{L('Profit', 'Tubo')}</dt><dd data-tone={c.profit >= 0 ? 'good' : 'bad'}>{peso(c.profit)}</dd></div>
       </dl>
-      {S.biz.deliveryOn && r.kind !== 'addon' && <span className="pcard-del">{L('Delivery app price: ', 'Presyo sa delivery app: ')}{delivery(S, c).price ? peso(delivery(S, c).price, 0) : '—'}</span>}
+      {deliveryOn(S) && r.kind !== 'addon' && <span className="pcard-del">{L('Delivery app price: ', 'Presyo sa delivery app: ')}{delivery(S, c).price ? peso(delivery(S, c).price, 0) : '—'}</span>}
       <span className="pcard-link" aria-hidden="true">{L('Edit', 'I-edit')}<Icon name="right" size={16} /></span>
     </div>
   );
@@ -51,8 +73,12 @@ export default function Products() {
   const [showTpl, setShowTpl] = useState(false);
   const addonHelp = useHelp('addon');
   const prods = S.recipes.filter((r) => r.kind !== 'addon'), adds = S.recipes.filter((r) => r.kind === 'addon');
-  const add = (kind: 'product' | 'addon') => { const r = recipe(kind, ''); update((d) => { d.recipes.push(r); }); router.push('/products/' + r.id + '?new=1'); };
+  const add = (kind: 'product' | 'addon') => {
+    if (kind === 'product' && !canAddProducts(S)) { openUpgrade('products'); return; }
+    const r = recipe(kind, ''); update((d) => { d.recipes.push(r); }); router.push('/products/' + r.id + '?new=1'); };
   const applyTpl = (k: string) => {
+    const T = TEMPLATES[k]; const adds = T.products.length + (T.sized || []).length;
+    if (!canAddProducts(S, adds)) { setShowTpl(false); openUpgrade('products'); return; }
     let n = 0; update((d) => { n = applyTemplate(d, k); }); setShowTpl(false);
     showToast(L('Added ', 'Nadagdag ang ') + n + L(' items. Update the prices to what you really pay.', ' items. Palitan ang presyo ng totoong binabayaran mo.'));
   };
@@ -71,6 +97,8 @@ export default function Products() {
     <>
       <PageHead title={L('Products', 'Mga produkto')} eyebrow="Step 1 of 4" lead={L('Each product has its own recipe cost and selling price. Tap one to edit it.', 'Bawat produkto may sariling cost at selling price. I-tap para i-edit.')}
         actions={<><button className="btn" onClick={() => setShowTpl((v) => !v)}>{L('Use a template', 'Gumamit ng template')}</button><button className="btn btn-yolk" onClick={() => add('product')}><Icon name="plus" size={18} />Add product</button></>} />
+      <PlanNotice />
+      <ProductMeter />
       {(showTpl || !S.recipes.length) && tpl}
       {!prods.length ? (
         <div className="empty"><strong>{L('No products yet', 'Wala pang produkto')}</strong><p>{L('Start with your best seller, or pick a template above.', 'Simulan sa best seller mo, o pumili ng template sa taas.')}</p>

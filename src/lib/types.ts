@@ -33,6 +33,8 @@ export interface Recipe {
   orders: string;
   items: Line[];
   sizes: Size[];
+  /** When it was made (ms). Decides which products stay open on the free plan; older data has none. */
+  created?: number;
 }
 
 export interface ComboItem { id: string; rid: string; qty: string }

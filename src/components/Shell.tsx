@@ -5,8 +5,10 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { progress } from '@/lib/calc';
 import { Icon } from './ui';
-import { signOut, undoLast, update, useData, useMeta, useT, useToast } from '@/store/store';
+import { signOut, undoLast, update, useData, useEnt, useMeta, useT, useToast } from '@/store/store';
 import { LogoMark } from '@/components/Logo';
+import { isPro } from '@/lib/plan';
+import { ProBadge, UpgradeModal } from './Pro';
 
 type Theme = 'light' | 'dark' | 'auto';
 function readTheme(): Theme { try { const t = localStorage.getItem('kerdion-theme'); return t === 'light' || t === 'dark' ? t : 'auto'; } catch { return 'auto'; } }
@@ -23,7 +25,8 @@ function SyncLabel() {
 }
 
 export default function Shell({ children }: { children: ReactNode }) {
-  const S = useData(); const meta = useMeta(); const L = useT(); const path = usePathname();
+  const S = useData(); const meta = useMeta(); const L = useT(); const path = usePathname(); const ent = useEnt();
+  const pro = isPro(); const cloud = meta.mode === 'cloud';
   const [open, setOpen] = useState(false);
   const [theme, setTheme] = useState<Theme>('auto');
   const menuBtn = useRef<HTMLButtonElement>(null);
@@ -49,10 +52,10 @@ export default function Shell({ children }: { children: ReactNode }) {
 
   const pr = progress(S);
   const cur = path.startsWith('/products') ? '/products' : path;
-  type Item = { group?: string; href?: string; label?: string; hint?: string; icon?: string; step?: number; key?: 'products' | 'expenses' | 'sales' | 'report'; badge?: number };
+  type Item = { group?: string; href?: string; label?: string; hint?: string; icon?: string; step?: number; key?: 'products' | 'expenses' | 'sales' | 'report'; badge?: number; pro?: boolean };
   const items: Item[] = [
     { group: 'Overview' },
-    { href: '/dashboard', label: 'Home', hint: L('Your summary', 'Buod ng negosyo'), icon: 'home', badge: S.alerts.length },
+    { href: '/dashboard', label: 'Home', hint: L('Your summary', 'Buod ng negosyo'), icon: 'home', badge: pro ? S.alerts.length : 0 },
     { group: L('Set up in 4 steps', 'Set up sa 4 steps') },
     { href: '/products', label: L('Products', 'Mga produkto'), hint: L('Cost and price', 'Gastos at presyo'), icon: 'bowl', step: 1, key: 'products' },
     { href: '/expenses', label: L('Expenses', 'Mga bayarin'), hint: L('Monthly bills', 'Buwanang bills'), icon: 'wallet', step: 2, key: 'expenses' },
@@ -61,8 +64,10 @@ export default function Shell({ children }: { children: ReactNode }) {
     { group: 'Tools' },
     { href: '/ingredients', label: L('Ingredient prices', 'Presyo ng sangkap'), hint: L('Update once, used everywhere', 'Isang update, updated lahat'), icon: 'basket' },
     { href: '/daily', label: L('Daily sales', 'Benta araw-araw'), hint: L('Log what you sold', 'I-log ang nabenta'), icon: 'cal' },
-    { href: '/combos', label: L('Combos & upsell', 'Combos at upsell'), hint: L('Meal deals, add-ons', 'Meal deals, add-ons'), icon: 'combo' },
+    { href: '/combos', label: L('Combos & upsell', 'Combos at upsell'), hint: L('Meal deals, add-ons', 'Meal deals, add-ons'), icon: 'combo', pro: !pro },
     { href: '/export', label: L('Export & backup', 'Export at backup'), hint: 'Excel, PDF, backup', icon: 'down' },
+    ...(cloud ? [{ href: '/upgrade', label: L('Plan & billing', 'Plan at bayad'), hint: pro ? (ent.tester ? L('Tester: full access', 'Tester: full access') : 'Saffra Pro') : L('Free plan · Go Pro', 'Free plan · Mag-Pro'), icon: 'star' }] : []),
+    ...(cloud && ent.admin ? [{ href: '/admin', label: 'Admin', hint: L('Payments and accounts', 'Bayad at accounts'), icon: 'shield' }] : []),
     { group: L('Help', 'Tulong') },
     { href: '/guide', label: L('How to use', 'Paano gamitin'), hint: L('Quick guide', 'Mabilis na guide'), icon: 'book' },
     { href: '/business', label: 'Business info', hint: L('Name, tax, delivery, rounding', 'Pangalan, tax, delivery, rounding'), icon: 'store' },
@@ -93,7 +98,8 @@ export default function Shell({ children }: { children: ReactNode }) {
                 <span className="nav-ic"><Icon name={n.icon!} /></span>
                 <span className="nav-txt">{n.label}<span className="nav-hint">{n.hint}</span></span>
                 {n.step ? <><span className={'step' + (done ? ' done' : '')} aria-hidden="true">{done ? <Icon name="check" size={13} /> : n.step}</span><span className="sr">, step {n.step}{done ? L(', done', ', tapos na') : ''}</span></>
-                  : n.badge ? <><span className="count" aria-hidden="true">{n.badge}</span><span className="sr">, {n.badge} price alerts</span></> : null}
+                  : n.badge ? <><span className="count" aria-hidden="true">{n.badge}</span><span className="sr">, {n.badge} price alerts</span></>
+                  : n.pro ? <ProBadge /> : null}
               </Link>
             );
           })}
@@ -129,6 +135,7 @@ export default function Shell({ children }: { children: ReactNode }) {
       </aside>
       <main className="main"><div className="main-inner">{children}</div></main>
       <Toast />
+      <UpgradeModal />
     </div>
   );
 }

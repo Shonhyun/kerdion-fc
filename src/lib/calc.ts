@@ -1,5 +1,6 @@
 import type { AppData, Calc, Combo, LibItem, Line, PriceAlert, PriceSnap, Prep, Recipe, SellUnit, Size } from './types';
 import { makeL, nid, num, peso, todayISO } from './format';
+import { isPro, lockedIds } from './plan';
 
 export const UNITS: Record<string, [string, number]> = { g: ['mass', 1], kg: ['mass', 1000], ml: ['vol', 1], L: ['vol', 1000], pc: ['count', 1] };
 export const UNIT_LIST = ['g', 'kg', 'ml', 'L', 'pc'];
@@ -18,10 +19,12 @@ export function rName(s: AppData, r: Recipe): string {
   const L = makeL(s.lang);
   return r.name || (r.kind === 'addon' ? L('Untitled add-on', 'Walang pangalang add-on') : L('Untitled product', 'Walang pangalan'));
 }
+/** Everything that can be sold and counted. Products locked on the free plan are left out. */
 export function units(s: AppData, kind?: 'product' | 'addon'): SellUnit[] {
-  const out: SellUnit[] = [];
+  const out: SellUnit[] = []; const locked = lockedIds(s);
   s.recipes.forEach((r) => {
     if (kind && r.kind !== kind) return;
+    if (locked.has(r.id)) return;
     if (r.sizes && r.sizes.length) r.sizes.forEach((z) => out.push({ key: r.id + '~' + z.id, r, s: z, name: rName(s, r) + ' · ' + (z.name || '?') }));
     else out.push({ key: r.id, r, s: null, name: rName(s, r) });
   });
@@ -120,7 +123,7 @@ export function totals(s: AppData) {
     t.rows.push(row); t.orders += o; t.rev += row.rev; t.cogs += row.cogs; t.tax += row.tax; t.gross += row.gross;
   };
   units(s).forEach((u) => add(u.r.kind === 'addon' ? 'a' : 'u', u.key, u.name, uCalc(s, u), uOrders(u)));
-  s.combos.forEach((cb) => add('c', cb.id, cb.name || L('Untitled combo', 'Walang pangalang combo'), comboCalc(s, cb), Math.max(0, Math.round(num(cb.orders)))));
+  activeCombos(s).forEach((cb) => add('c', cb.id, cb.name || L('Untitled combo', 'Walang pangalang combo'), comboCalc(s, cb), Math.max(0, Math.round(num(cb.orders)))));
   t.fixed = s.fixed.reduce((a, f) => a + Math.max(0, num(f.amount)), 0);
   t.net = t.gross - t.fixed;
   t.days = Math.max(1, Math.round(num(s.biz.daysOpen)) || 1);
@@ -128,6 +131,8 @@ export function totals(s: AppData) {
   t.be = t.avg > 0 ? Math.ceil(t.fixed / t.avg) : 0;
   return t;
 }
+/** Combos are a Pro feature: on the free plan they are kept but left out of every total. */
+export function activeCombos(s: AppData): Combo[] { return isPro() ? s.combos : []; }
 export function usedIn(s: AppData, refId: string): string[] {
   const out: string[] = [];
   s.recipes.forEach((r) => {
@@ -153,7 +158,7 @@ export function unitPriceText(per: number, dim: string): string {
 export function logItems(s: AppData) {
   const L = makeL(s.lang);
   return units(s).map((u) => ({ key: u.key, name: u.name, c: uCalc(s, u) as { sell: number; profit: number }, combo: false }))
-    .concat(s.combos.map((cb) => ({ key: cb.id, name: cb.name || L('Combo', 'Combo'), c: comboCalc(s, cb), combo: true })));
+    .concat(activeCombos(s).map((cb) => ({ key: cb.id, name: cb.name || L('Combo', 'Combo'), c: comboCalc(s, cb), combo: true })));
 }
 /** Pass `items` from a single `logItems` call when totalling several days: it prices every product. */
 export function dayStats(s: AppData, d: string, items: ReturnType<typeof logItems> = logItems(s)) {
