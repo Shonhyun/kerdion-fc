@@ -90,17 +90,16 @@ Open http://localhost:3000. You will be sent to the sign-in page.
 Limits and prices live in `src/lib/plan.ts`.
 
 - **Nothing is ever deleted.** When Pro ends, the first 5 products made stay open and the newer ones turn gray and locked. Locked products, combos and older daily logs are left out of every total, then come back as they were on renewal.
-- **Payment is manual, by GCash QR.** The user picks a plan on `/upgrade`, pays, and uploads the receipt screenshot. The admin checks it on `/admin` and taps Approve, which starts Pro right away (or adds the time on top if Pro is still active). Rejecting asks for a reason that the user sees.
+- **Payment is manual, by InstaPay QR (Maya or BPI), which GCash, Maya and bank apps can all scan.** The user picks a plan on `/upgrade`, pays, and uploads the receipt screenshot. The admin checks it on `/admin` and taps Approve, which starts Pro right away (or adds the time on top if Pro is still active). Rejecting asks for a reason that the user sees.
 - **Testers** (free full access, no end date) are turned on from the Accounts tab of `/admin`.
 - Users can read their plan but never change it: the `subscriptions` table has no write policies, and only the admin functions in `supabase/billing.sql` change it.
 
 ### Setup
 
 1. Run [`supabase/billing.sql`](supabase/billing.sql) in the Supabase SQL Editor (after `schema.sql`). Run it **before** deploying this version: until it exists every account is treated as Free.
-2. Sign up in the app with the admin email, then run the last line of `billing.sql` with that email to make it an admin. Reload the app and an **Admin** item appears in the menu.
-3. Put the GCash QR image at `public/gcash-qr.png`.
-4. Optional: set `NEXT_PUBLIC_GCASH_NAME` and `NEXT_PUBLIC_GCASH_NUMBER` in Vercel to show the account name and number under the QR.
-5. Receipt screenshots go to the private `payment-proofs` storage bucket (5 MB max, PNG, JPG or WEBP). Only the owner and admins can open them.
+2. The admin is `shounramos20@gmail.com` (last line of `billing.sql`). That account must sign up and confirm its email **before** the file runs; if it ran first, run the last line again. Reload the app and an **Admin** item appears in the menu.
+3. The payment QR codes are `public/pay-maya.jpg` and `public/pay-bpi.png`, listed in `PAY_QR` in `src/lib/plan.ts`. Replace the images or edit the list to change where payments go.
+4. Receipt screenshots go to the private `payment-proofs` storage bucket (5 MB max, PNG, JPG or WEBP). Only the owner and admins can open them.
 
 The plan checks run in the browser, so they keep honest users honest; the plan itself and every payment record are protected by Row Level Security in Supabase.
 

@@ -2,7 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { GCASH, PRICE, entExpired, entIsPro, type Billing } from '@/lib/plan';
+import { PAY_QR, PRICE, entExpired, entIsPro, type Billing } from '@/lib/plan';
 import { getSupabase } from '@/lib/supabase/client';
 import { Icon, PageHead } from '../ui';
 import { PlanCards, fmtDay, useProList } from '../Pro';
@@ -18,11 +18,22 @@ function fmtWhen(iso: string, lang: 'en' | 'tl') {
   return new Date(iso).toLocaleString(lang === 'tl' ? 'fil-PH' : 'en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
-function QrImage() {
-  const L = useT(); const [ok, setOk] = useState(true);
-  if (!ok) return <div className="qr-missing">{L('GCash QR is not set up yet. Please message us on Viber to pay.', 'Wala pang GCash QR. Mag-message muna sa amin sa Viber para makapagbayad.')}</div>;
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={GCASH.qr} alt={L('GCash QR code for Saffra payments', 'GCash QR code para sa bayad sa Saffra')} onError={() => setOk(false)} />;
+function QrBox() {
+  const L = useT(); const [k, setK] = useState(0); const [bad, setBad] = useState(false);
+  const q = PAY_QR[k];
+  return (
+    <div className="qr-box">
+      {PAY_QR.length > 1 && (
+        <div className="seg2" role="group" aria-label={L('Pay to', 'Bayaran sa')} style={{ width: '100%', maxWidth: 260 }}>
+          {PAY_QR.map((x, i) => <button key={x.key} type="button" aria-pressed={i === k} onClick={() => { setK(i); setBad(false); }}>{x.label}</button>)}
+        </div>
+      )}
+      {bad ? <div className="qr-missing">{L('This QR could not load. Try the other one, or message us on Viber.', 'Hindi ma-load ang QR na ito. Subukan ang isa, o mag-message sa amin sa Viber.')}</div>
+        // eslint-disable-next-line @next/next/no-img-element
+        : <img src={q.src} alt={q.label + ' InstaPay QR code for ' + q.name} onError={() => setBad(true)} />}
+      <span className="help" style={{ color: '#55605A' }}>{L('InstaPay QR · works with GCash, Maya and bank apps', 'InstaPay QR · pwede sa GCash, Maya at bank apps')}</span>
+    </div>
+  );
 }
 
 export default function Upgrade() {
@@ -64,7 +75,7 @@ export default function Upgrade() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setErr('');
     const sb = getSupabase(); if (!sb) return;
-    if (!file) { setErr(L('Upload the screenshot of your GCash receipt first.', 'I-upload muna ang screenshot ng GCash receipt mo.')); return; }
+    if (!file) { setErr(L('Upload the screenshot of your payment receipt first.', 'I-upload muna ang screenshot ng payment receipt mo.')); return; }
     setBusy(true);
     const ext = file.type === 'image/png' ? 'png' : file.type === 'image/webp' ? 'webp' : 'jpg';
     const path = meta.userId + '/' + Date.now() + '.' + ext;
@@ -99,7 +110,7 @@ export default function Upgrade() {
 
   return (
     <>
-      <PageHead title={L('Plan & billing', 'Plan at bayad')} lead={L('Saffra Pro unlocks every feature for your business. Pay with GCash and we turn on Pro within 24 hours.', 'Ina-unlock ng Saffra Pro lahat ng features para sa negosyo mo. Magbayad via GCash at ia-on namin ang Pro within 24 hours.')} />
+      <PageHead title={L('Plan & billing', 'Plan at bayad')} lead={L('Saffra Pro unlocks every feature for your business. Pay by QR with GCash, Maya or your bank app, and we turn on Pro within 24 hours.', 'Ina-unlock ng Saffra Pro lahat ng features para sa negosyo mo. Magbayad by QR gamit ang GCash, Maya o bank app, at ia-on namin ang Pro within 24 hours.')} />
       {planCard}
       {loading ? <p className="help" role="status">{L('Loading…', 'Naglo-load…')}</p> : pending && last ? (
         <section className="card" aria-labelledby="h-wait">
@@ -122,16 +133,12 @@ export default function Upgrade() {
             <ul className="pro-list">{list.map((x) => <li key={x}><Icon name="check" size={16} />{x}</li>)}</ul>
           </section>
           <section className="card" aria-labelledby="h-pay">
-            <div className="card-head"><h2 id="h-pay">{L('2. Pay with GCash', '2. Magbayad via GCash')}</h2><p>{L('Amount to pay: ', 'Babayaran: ')}<strong>₱{n0(PRICE[billing])}</strong> · Pro {billing === 'yearly' ? 'Yearly' : 'Monthly'}</p></div>
+            <div className="card-head"><h2 id="h-pay">{L('2. Pay by QR', '2. Magbayad by QR')}</h2><p>{L('Amount to pay: ', 'Babayaran: ')}<strong>₱{n0(PRICE[billing])}</strong> · Pro {billing === 'yearly' ? 'Yearly' : 'Monthly'}</p></div>
             <div className="grid2">
-              <div className="qr-box">
-                <QrImage />
-                {GCASH.name && <strong>{GCASH.name}</strong>}
-                {GCASH.number && <span>GCash {GCASH.number}</span>}
-              </div>
+              <QrBox />
               <ol className="pay-steps">
-                <li>{L('Open GCash and tap ', 'Buksan ang GCash at i-tap ang ')}<strong>Scan QR</strong>.</li>
-                <li>{L('Scan this code and pay exactly ', 'I-scan ang code at bayaran ng eksaktong ')}<strong>₱{n0(PRICE[billing])}</strong>.</li>
+                <li>{L('Open GCash, Maya or your bank app and tap ', 'Buksan ang GCash, Maya o bank app mo at i-tap ang ')}<strong>Scan QR</strong>{L(' (or Pay QR).', ' (o Pay QR).')}</li>
+                <li>{L('Scan the code (on the same phone? save it as a picture first) and pay exactly ', 'I-scan ang code (parehong phone? i-save muna as picture) at bayaran ng eksaktong ')}<strong>₱{n0(PRICE[billing])}</strong>.</li>
                 <li>{L('Take a screenshot of the receipt that shows the reference number.', 'Mag-screenshot ng receipt na may reference number.')}</li>
                 <li>{L('Upload the screenshot below and tap Send.', 'I-upload ang screenshot sa ibaba at i-tap ang Send.')}</li>
               </ol>
@@ -147,7 +154,7 @@ export default function Upgrade() {
               {preview && <img className="proof-preview" src={preview} alt={L('Your receipt screenshot', 'Screenshot ng receipt mo')} />}
             </div>
             <div className="field" style={{ maxWidth: 320 }}>
-              <label htmlFor="pay-ref">{L('GCash reference number (optional)', 'GCash reference number (optional)')}</label>
+              <label htmlFor="pay-ref">{L('Reference number (optional)', 'Reference number (optional)')}</label>
               <input className="input" id="pay-ref" value={ref} maxLength={60} inputMode="numeric" autoComplete="off" placeholder={L('e.g. 1234 567 890123', 'hal. 1234 567 890123')} onChange={(e) => setRef(e.target.value)} />
             </div>
             {err && <p className="confirm" role="alert">{err}</p>}

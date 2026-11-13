@@ -1,10 +1,10 @@
--- Saffra billing: plans, manual GCash payments and the admin page.
+-- Saffra billing: plans, manual QR payments (InstaPay: GCash, Maya, banks) and the admin page.
 -- Run this once in Supabase Dashboard > SQL Editor > New query, AFTER schema.sql.
 -- It is safe to run again: every statement checks before it creates.
 --
 -- How it works
 -- - Every account is on the Free plan until an admin approves a payment.
--- - A user pays by GCash QR, uploads the receipt screenshot, and a payment request is created.
+-- - A user pays by QR (Maya or BPI InstaPay), uploads the receipt screenshot, and a payment request is created.
 -- - The admin opens /admin, looks at the receipt and approves or rejects it.
 -- - Approving starts (or extends) Pro for 1 month or 1 year.
 -- - Users can READ their own plan but can never change it. Only the admin functions below can.
@@ -237,6 +237,7 @@ create policy "Users see their own receipts, admins see all"
   to authenticated
   using (bucket_id = 'payment-proofs' and ((storage.foldername(name))[1] = (select auth.uid())::text or public.is_admin()));
 
--- ---------- make yourself admin ----------
--- Sign up in the app first with the admin email, then replace the email below and run this line:
--- insert into public.admins (user_id) select id from auth.users where email = 'YOUR-ADMIN-EMAIL@example.com' on conflict do nothing;
+-- ---------- admin account ----------
+-- Adds the admin once that email has signed up in the app. If it runs before the sign-up, it adds
+-- nothing: sign up, then run this file (or just this line) again.
+insert into public.admins (user_id) select id from auth.users where email = 'shounramos20@gmail.com' on conflict do nothing;

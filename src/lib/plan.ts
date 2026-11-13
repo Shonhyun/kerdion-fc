@@ -9,12 +9,14 @@ export type Billing = keyof typeof PRICE;
 /** What a year saves compared with paying monthly for 12 months. */
 export const YEARLY_SAVES = PRICE.monthly * 12 - PRICE.yearly;
 
-/** GCash details shown on the payment page. The QR image lives at public/gcash-qr.png. */
-export const GCASH = {
-  name: process.env.NEXT_PUBLIC_GCASH_NAME || '',
-  number: process.env.NEXT_PUBLIC_GCASH_NUMBER || '',
-  qr: '/gcash-qr.png',
-};
+/**
+ * Where users send payment. Both are InstaPay QR codes, so GCash, Maya and most bank apps can
+ * scan either one. The images live in public/.
+ */
+export const PAY_QR = [
+  { key: 'maya', label: 'Maya', name: 'SHOUN RAMOS', src: '/pay-maya.jpg' },
+  { key: 'bpi', label: 'BPI', name: 'Shoun Antaran Ramos', src: '/pay-bpi.png' },
+] as const;
 
 /** The signed-in account's plan, as stored in Supabase (read-only for users). */
 export interface Ent {

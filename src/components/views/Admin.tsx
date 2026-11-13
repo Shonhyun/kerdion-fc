@@ -45,7 +45,7 @@ function PayCard({ p, url, onDone, onZoom }: { p: Pay; url: string; onDone: () =
         {p.admin_note && <span className="help">Note: {p.admin_note}</span>}
         <Pill tone={tone} style={{ alignSelf: 'flex-start' }}>{p.status}</Pill>
         {p.status === 'pending' && (mode === 'approve'
-          ? <ConfirmBox msg={'Turn on Pro ' + p.billing + ' for ' + (p.email || 'this account') + '? Check that ₱' + n0(p.amount) + ' arrived in GCash first.'} yes={busy ? 'Approving…' : 'Yes, approve'} onYes={() => act('approve')} onNo={() => setMode('')} />
+          ? <ConfirmBox msg={'Turn on Pro ' + p.billing + ' for ' + (p.email || 'this account') + '? Check that ₱' + n0(p.amount) + ' arrived in your Maya or BPI account first.'} yes={busy ? 'Approving…' : 'Yes, approve'} onYes={() => act('approve')} onNo={() => setMode('')} />
           : mode === 'reject' ? (
             <div className="field">
               <label htmlFor={'note-' + p.id}>Reason (the user sees this)</label>
@@ -112,7 +112,7 @@ export default function Admin() {
 
   return (
     <>
-      <PageHead title="Admin" lead="Verify GCash payments and see every account. Approving starts Pro right away, or adds the time on top if it is still active." actions={<button className="btn" onClick={load} disabled={loading}>{loading ? 'Loading…' : 'Refresh'}</button>} />
+      <PageHead title="Admin" lead="Verify QR payments and see every account. Approving starts Pro right away, or adds the time on top if it is still active." actions={<button className="btn" onClick={load} disabled={loading}>{loading ? 'Loading…' : 'Refresh'}</button>} />
       <div className="kpis">
         <div className="stat"><span className="k">Accounts</span><span className="v">{n0(accts.length)}</span></div>
         <div className="stat"><span className="k">Active Pro</span><span className="v">{n0(pro)}</span></div>

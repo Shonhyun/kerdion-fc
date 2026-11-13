@@ -87,7 +87,7 @@ export function UpgradeModal() {
         <p className="help" style={{ fontSize: 15, color: 'var(--ink)' }}>{why[up.reason]}</p>
         <PlanCards onPick={pick} />
         <ul className="pro-list">{list.map((x) => <li key={x}><Icon name="check" size={16} />{x}</li>)}</ul>
-        <p className="help">{L('Pay with GCash. We verify your payment within 24 hours, then Pro turns on. Nothing you saved is ever deleted.', 'Magbayad via GCash. Ive-verify namin ang bayad within 24 hours, tapos mag-o-on na ang Pro. Walang mabubura sa mga na-save mo.')}</p>
+        <p className="help">{L('Pay by QR with GCash, Maya or your bank app. We verify your payment within 24 hours, then Pro turns on. Nothing you saved is ever deleted.', 'Magbayad by QR gamit ang GCash, Maya o bank app mo. Ive-verify namin ang bayad within 24 hours, tapos mag-o-on na ang Pro. Walang mabubura sa mga na-save mo.')}</p>
       </div>
     </div>
   );
