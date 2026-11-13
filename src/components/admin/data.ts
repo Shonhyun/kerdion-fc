@@ -10,6 +10,12 @@ export interface Pay {
 export interface Acct {
   user_id: string; email: string; business_name: string; signed_up: string; products: number;
   plan: string; billing: string | null; current_period_end: string | null; is_tester: boolean;
+  last_active: string | null;
+}
+/** One account's saved business, as the admin sees it (read-only). */
+export interface BizView {
+  user_id: string; email: string; signed_up: string; last_sign_in: string | null;
+  business_name: string; data: unknown; created_at: string | null; updated_at: string | null;
 }
 export type AcctStatus = 'tester' | 'pro' | 'expired' | 'free';
 
@@ -54,6 +60,12 @@ export async function loadAccounts(): Promise<Acct[]> {
   const { data, error } = await sb.rpc('admin_list_accounts');
   if (error) throw error;
   return (data || []) as Acct[];
+}
+export async function loadBusiness(userId: string): Promise<BizView | null> {
+  const sb = getSupabase(); if (!sb) return null;
+  const { data, error } = await sb.rpc('admin_get_business', { p_user: userId });
+  if (error) throw error;
+  return ((data || []) as BizView[])[0] || null;
 }
 /** Short-lived links to the private receipt images, keyed by their storage path. */
 export async function receiptUrls(paths: string[]): Promise<Record<string, string>> {

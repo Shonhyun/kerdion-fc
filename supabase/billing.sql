@@ -186,11 +186,13 @@ begin
 end;
 $$;
 
--- Every account with its plan and product count, for the admin page.
+-- Every account with its plan, product count and when its data last changed, for the admin page.
+-- Dropped first because the columns it returns changed (last_active was added).
+drop function if exists public.admin_list_accounts();
 create or replace function public.admin_list_accounts()
 returns table (
   user_id uuid, email text, business_name text, signed_up timestamptz, products integer,
-  plan text, billing text, current_period_end timestamptz, is_tester boolean
+  plan text, billing text, current_period_end timestamptz, is_tester boolean, last_active timestamptz
 )
 language plpgsql
 stable
@@ -203,7 +205,8 @@ begin
     select u.id, u.email::text, coalesce(b.name, ''), u.created_at,
            coalesce((select count(*)::int from jsonb_array_elements(case when jsonb_typeof(b.data->'recipes') = 'array' then b.data->'recipes' else '[]'::jsonb end) r
                      where coalesce(r->>'kind', 'product') = 'product'), 0),
-           coalesce(s.plan, 'free'), s.billing, s.current_period_end, coalesce(s.is_tester, false)
+           coalesce(s.plan, 'free'), s.billing, s.current_period_end, coalesce(s.is_tester, false),
+           b.updated_at
       from auth.users u
       left join public.businesses b on b.owner_id = u.id
       left join public.subscriptions s on s.user_id = u.id
@@ -211,14 +214,39 @@ begin
 end;
 $$;
 
+-- One account's full business data, read-only, so the admin can see what a user has set up
+-- (products, ingredients, expenses, sales logs) to help them and to learn how Saffra is used.
+create or replace function public.admin_get_business(p_user uuid)
+returns table (
+  user_id uuid, email text, signed_up timestamptz, last_sign_in timestamptz,
+  business_name text, data jsonb, created_at timestamptz, updated_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_admin() then raise exception 'Not allowed'; end if;
+  return query
+    select u.id, u.email::text, u.created_at, u.last_sign_in_at,
+           coalesce(b.name, ''), coalesce(b.data, '{}'::jsonb), b.created_at, b.updated_at
+      from auth.users u
+      left join public.businesses b on b.owner_id = u.id
+     where u.id = p_user;
+end;
+$$;
+
 revoke all on function public.approve_payment(uuid) from public, anon;
 revoke all on function public.reject_payment(uuid, text) from public, anon;
 revoke all on function public.set_tester(uuid, boolean) from public, anon;
 revoke all on function public.admin_list_accounts() from public, anon;
+revoke all on function public.admin_get_business(uuid) from public, anon;
 grant execute on function public.approve_payment(uuid) to authenticated;
 grant execute on function public.reject_payment(uuid, text) to authenticated;
 grant execute on function public.set_tester(uuid, boolean) to authenticated;
 grant execute on function public.admin_list_accounts() to authenticated;
+grant execute on function public.admin_get_business(uuid) to authenticated;
 
 -- ---------- receipt screenshots (private storage) ----------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

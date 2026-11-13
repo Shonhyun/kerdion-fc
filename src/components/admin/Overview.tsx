@@ -83,7 +83,7 @@ export default function Overview() {
         <div className="card-head row"><h2 id="h-new">Newest accounts</h2><Link className="btn btn-sm" href="/admin/accounts">See all <Icon name="right" size={16} /></Link></div>
         {recentAccts.length ? (
           <ul className="adm-list">{recentAccts.map((a) => { const s = acctStatus(a); return (
-            <li key={a.user_id}><div><strong>{a.email}</strong><span className="help">{a.business_name || '—'} · {a.products} products · joined {fmtDay(a.signed_up)}</span></div><Pill tone={STATUS_TONE[s]}>{STATUS_LABEL[s]}</Pill></li>
+            <li key={a.user_id}><div><Link href={'/admin/accounts/' + a.user_id}><strong>{a.email}</strong></Link><span className="help">{a.business_name || '—'} · {a.products} products · joined {fmtDay(a.signed_up)}</span></div><Pill tone={STATUS_TONE[s]}>{STATUS_LABEL[s]}</Pill></li>
           ); })}</ul>
         ) : <p className="help">{loading ? 'Loading…' : 'No accounts yet.'}</p>}
       </section>

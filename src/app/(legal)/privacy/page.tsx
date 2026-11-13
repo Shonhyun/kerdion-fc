@@ -19,7 +19,7 @@ export default function PrivacyPage() {
       <h2>The short version</h2>
       <ul>
         <li>We collect only what Saffra needs to work: your email, your password (stored scrambled), your business name and the business numbers you type in.</li>
-        <li>Your business data is private to your account. Other users cannot see it.</li>
+        <li>Your business data is private to your account. Other users cannot see it. Only the Saffra admin can view it, to support you and fix problems.</li>
         <li>We do not sell your data or show ads. We only count visits anonymously, without cookies, to see how Saffra is used.</li>
         <li>You can download your data any time and ask us to delete your account.</li>
       </ul>
@@ -62,6 +62,7 @@ export default function PrivacyPage() {
       <ul>
         <li>All connections to Saffra use HTTPS encryption.</li>
         <li>Database rules make sure each signed-in account can read and change only its own business data.</li>
+        <li>The Saffra admin (the operator named above) can view, but not change, the business data in your account. We do this only to help you when you ask, to fix problems, and to understand which features are used so we can improve Saffra.</li>
         <li>Passwords are never stored in readable form.</li>
       </ul>
       <p>No online service can be perfectly secure. If we learn of a breach that affects your personal data, we will notify you and the National Privacy Commission as the law requires.</p>

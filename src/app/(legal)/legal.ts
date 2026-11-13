@@ -3,5 +3,5 @@ export const LEGAL = {
   operator: 'Shoun Ramos',
   location: 'Lingayen, Pangasinan, Philippines',
   email: 'shounramos09@gmail.com',
-  effective: 'October 29, 2026',
+  effective: 'November 14, 2026',
 };
