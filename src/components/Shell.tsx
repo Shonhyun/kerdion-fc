@@ -67,7 +67,7 @@ export default function Shell({ children }: { children: ReactNode }) {
     { href: '/combos', label: L('Combos & upsell', 'Combos at upsell'), hint: L('Meal deals, add-ons', 'Meal deals, add-ons'), icon: 'combo', pro: !pro },
     { href: '/export', label: L('Export & backup', 'Export at backup'), hint: 'Excel, PDF, backup', icon: 'down' },
     ...(cloud ? [{ href: '/upgrade', label: L('Plan & billing', 'Plan at bayad'), hint: pro ? (ent.tester ? L('Tester: full access', 'Tester: full access') : 'Saffra Pro') : L('Free plan · Go Pro', 'Free plan · Mag-Pro'), icon: 'star' }] : []),
-    ...(cloud && ent.admin ? [{ href: '/admin', label: 'Admin', hint: L('Payments and accounts', 'Bayad at accounts'), icon: 'shield' }] : []),
+    ...(cloud && ent.admin ? [{ href: '/admin', label: L('Admin panel', 'Admin panel'), hint: L('Payments and subscribers', 'Bayad at subscribers'), icon: 'shield' }] : []),
     { group: L('Help', 'Tulong') },
     { href: '/guide', label: L('How to use', 'Paano gamitin'), hint: L('Quick guide', 'Mabilis na guide'), icon: 'book' },
     { href: '/business', label: 'Business info', hint: L('Name, tax, delivery, rounding', 'Pangalan, tax, delivery, rounding'), icon: 'store' },

@@ -67,9 +67,11 @@ export default function AuthForm({ mode }: { mode: Mode }) {
     setBusy(true); setErr(''); setOk('');
     try {
       if (mode === 'login') {
-        const { error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
+        const { data: signed, error } = await sb.auth.signInWithPassword({ email: email.trim(), password });
         if (error) throw error;
-        router.replace('/dashboard'); router.refresh();
+        // Admins land on the admin panel; everyone else on their dashboard.
+        const adm = signed.user ? await sb.from('admins').select('user_id').eq('user_id', signed.user.id).maybeSingle() : null;
+        router.replace(adm && !adm.error && adm.data ? '/admin' : '/dashboard'); router.refresh();
       } else if (mode === 'signup') {
         const { data, error } = await sb.auth.signUp({
           email: email.trim(), password,

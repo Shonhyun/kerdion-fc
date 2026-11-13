@@ -578,3 +578,11 @@ img { max-width: 100%; }
 .adm-pay .meta { display: flex; flex-direction: column; gap: 4px; font-size: 14px; min-width: 0; overflow-wrap: anywhere; }
 .adm-big { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, .8); display: grid; place-items: center; padding: 16px; }
 .adm-big img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+/* ---------- admin panel ---------- */
+.adm-tag { margin-left: 6px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; background: var(--ink); color: var(--bg); }
+.admin-app .nav a[aria-current="page"] { background: var(--accent); color: var(--on-accent); }
+.adm-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.adm-list li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.adm-list li:last-child { border-bottom: 0; }
+.adm-list li > div { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.adm-thumb { border: 0; padding: 0; background: none; cursor: zoom-in; }
