@@ -9,7 +9,7 @@ export function lib(cat: 'ing' | 'pack', name: string, price: number | string, q
 }
 export function line(ref: string, qty: number | string, unit: string): Line { return { id: nid('x'), ref, qty: String(qty), unit }; }
 export function recipe(kind: 'product' | 'addon', name: string, extra?: Partial<Recipe>): Recipe {
-  return { id: nid('r'), kind, name, mode: 'margin', margin: '30', price: '', benchmark: '', orders: '0', items: [], sizes: [], ...(extra || {}) };
+  return { id: nid('r'), kind, name, mode: 'margin', margin: '30', price: '', benchmark: '', orders: '0', items: [], sizes: [], created: Date.now(), ...(extra || {}) };
 }
 
 export function fresh(lang: Lang = 'en', businessName = ''): AppData {
@@ -220,7 +220,7 @@ export function sizeDel(s: AppData, r: Recipe, sid: string) {
 export function dupRecipe(s: AppData, r: Recipe): Recipe {
   const L = makeL(s.lang);
   const c: Recipe = JSON.parse(JSON.stringify(r)); const map: Record<string, string> = {};
-  c.id = nid('r'); c.name = (r.name || '') + L(' (copy)', ' (kopya)'); c.orders = '0';
+  c.id = nid('r'); c.name = (r.name || '') + L(' (copy)', ' (kopya)'); c.orders = '0'; c.created = Date.now();
   c.sizes.forEach((z) => { const n = nid('s'); map[z.id] = n; z.id = n; z.orders = '0'; });
   c.items.forEach((x) => { x.id = nid('x'); if (x.q) { const q: Record<string, string> = {}; Object.keys(x.q).forEach((k) => { if (map[k]) q[map[k]] = x.q![k]; }); x.q = q; } });
   s.recipes.splice(s.recipes.findIndex((x) => x.id === r.id) + 1, 0, c);

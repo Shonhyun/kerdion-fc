@@ -5,6 +5,7 @@ import { dayStats, progress, totals } from '@/lib/calc';
 import { int, peso, todayISO, tone } from '@/lib/format';
 import { Icon, PageHead } from '../ui';
 import { AlertsCard, BackupNotice, GoalBlock, SampleNotice } from '../blocks';
+import { PlanNotice } from '../Pro';
 import { useData, useMeta, useT } from '@/store/store';
 
 export default function Home() {
@@ -21,6 +22,7 @@ export default function Home() {
     <>
       <SampleNotice />
       <BackupNotice local={meta.mode === 'local'} />
+      <PlanNotice />
       <PageHead title={S.biz.name ? L('Hi, ', 'Hello, ') + S.biz.name : L('Welcome to Saffra', 'Welcome sa Saffra')} lead={L('Here is how your business is doing based on your numbers.', 'Ito ang lagay ng negosyo mo base sa numbers mo.')} />
       <div className="kpis">
         <div className="stat"><span className="k">{L('Net profit per month', 'Net profit kada buwan')}</span><span className="v" data-tone={tone(t.net)}>{peso(t.net, 0)}</span><span className="s">{L('After all costs', 'Bawas na lahat ng gastos')}</span></div>

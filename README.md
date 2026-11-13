@@ -77,6 +77,33 @@ Open http://localhost:3000. You will be sent to the sign-in page.
 | `npm start` | Run the production build |
 | `npm run typecheck` | TypeScript check |
 
+## Plans and payments (Saffra Pro)
+
+| | Free | Pro Monthly | Pro Yearly (best value) |
+|---|---|---|---|
+| Price | ₱0 | ₱299 / month | ₱2,990 / year (saves ₱598) |
+| Products | 5 | Unlimited | Unlimited |
+| Sub-recipes | 2 | Unlimited | Unlimited |
+| Daily sales history | Last 7 days | Full | Full |
+| Excel and PDF export, delivery app prices, price history and alerts, combos and upsell, competitor price check | No | Yes | Yes |
+
+Limits and prices live in `src/lib/plan.ts`.
+
+- **Nothing is ever deleted.** When Pro ends, the first 5 products made stay open and the newer ones turn gray and locked. Locked products, combos and older daily logs are left out of every total, then come back as they were on renewal.
+- **Payment is manual, by GCash QR.** The user picks a plan on `/upgrade`, pays, and uploads the receipt screenshot. The admin checks it on `/admin` and taps Approve, which starts Pro right away (or adds the time on top if Pro is still active). Rejecting asks for a reason that the user sees.
+- **Testers** (free full access, no end date) are turned on from the Accounts tab of `/admin`.
+- Users can read their plan but never change it: the `subscriptions` table has no write policies, and only the admin functions in `supabase/billing.sql` change it.
+
+### Setup
+
+1. Run [`supabase/billing.sql`](supabase/billing.sql) in the Supabase SQL Editor (after `schema.sql`). Run it **before** deploying this version: until it exists every account is treated as Free.
+2. Sign up in the app with the admin email, then run the last line of `billing.sql` with that email to make it an admin. Reload the app and an **Admin** item appears in the menu.
+3. Put the GCash QR image at `public/gcash-qr.png`.
+4. Optional: set `NEXT_PUBLIC_GCASH_NAME` and `NEXT_PUBLIC_GCASH_NUMBER` in Vercel to show the account name and number under the QR.
+5. Receipt screenshots go to the private `payment-proofs` storage bucket (5 MB max, PNG, JPG or WEBP). Only the owner and admins can open them.
+
+The plan checks run in the browser, so they keep honest users honest; the plan itself and every payment record are protected by Row Level Security in Supabase.
+
 ## Project structure
 
 ```
@@ -84,15 +111,17 @@ src/
   app/
     (auth)/            login, signup, forgot-password, reset-password
     (app)/             dashboard, welcome, products, products/[id], ingredients, expenses,
-                       sales, report, daily, combos, export, guide, business
+                       sales, report, daily, combos, export, guide, business, upgrade, admin
     auth/callback/     handles links from confirmation and reset emails
     (legal)/           privacy policy and terms of use (public pages)
     globals.css        all styles
   components/          Shell (sidebar and mobile menu), shared UI, one file per screen in views/
-  lib/                 calc.ts (all math), data.ts (templates, sample data, sizes), exporters.ts, supabase/
+  lib/                 calc.ts (all math), data.ts (templates, sample data, sizes), plan.ts (Free/Pro limits),
+                       exporters.ts, supabase/
   store/store.ts       app state, auto-save, version check, undo
   middleware.ts        keeps the session fresh and protects pages
 supabase/schema.sql    table, trigger and Row Level Security policies
+supabase/billing.sql   plans, payments, admins, receipt storage and admin functions
 ```
 
 ## Security notes
@@ -108,4 +137,5 @@ supabase/schema.sql    table, trigger and Row Level Security policies
 - AI receipt scan (needs a server-side AI API key in a Next.js route handler)
 - Installable app and full offline mode (PWA)
 - Delete account from inside the app, and data export on request
-- Paid plan
+- Automatic payments (PayMongo: GCash, Maya, cards)
+- Staff accounts, multiple branches

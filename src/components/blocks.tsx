@@ -8,6 +8,7 @@ import { fresh } from '@/lib/data';
 import { fmtDate, int, num, peso, tone } from '@/lib/format';
 import { ConfirmBox, Icon, Peso } from './ui';
 import { afterSetup, replaceData, update, useData, useT } from '@/store/store';
+import { isPro } from '@/lib/plan';
 
 const DAY = 86400000;
 
@@ -45,7 +46,7 @@ export function BackupNotice({ local }: { local: boolean }) {
 
 export function AlertsList({ limit = 8 }: { limit?: number }) {
   const S = useData(); const L = useT();
-  if (!S.alerts.length) return null;
+  if (!S.alerts.length || !isPro()) return null;
   return (
     <ul className="alerts">
       {S.alerts.slice(0, limit).map((a) => {
@@ -64,7 +65,7 @@ export function AlertsList({ limit = 8 }: { limit?: number }) {
 
 export function AlertsCard({ title, limit }: { title: string; limit: number }) {
   const S = useData(); const L = useT();
-  if (!S.alerts.length) return null;
+  if (!S.alerts.length || !isPro()) return null;
   return (
     <section className="card" aria-label={title}>
       <div className="card-head row"><h2>{title}</h2>

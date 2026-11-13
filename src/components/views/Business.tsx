@@ -8,6 +8,8 @@ import { getSupabase } from '@/lib/supabase/client';
 import { ConfirmBox, Icon, PageHead, Suffix, useHelp } from '../ui';
 import { RoundSelect } from './ProductEditor';
 import { replaceData, signOut, update, useData, useMeta, useT } from '@/store/store';
+import { isPro } from '@/lib/plan';
+import { ProLock } from '../Pro';
 
 export default function Business() {
   const S = useData(); const L = useT(); const meta = useMeta(); const router = useRouter();
@@ -44,8 +46,10 @@ export default function Business() {
       </section>
       <section className="card" aria-labelledby="h-del">
         <div className="card-head"><h2 id="h-del">Delivery apps{hDel.btn}</h2>{hDel.text}</div>
-        <label className="switch" htmlFor="biz-delon"><input type="checkbox" id="biz-delon" checked={S.biz.deliveryOn} onChange={(e) => set('deliveryOn', e.target.checked)} /><span>{L('Show delivery app prices', 'Ipakita ang delivery app prices')}</span></label>
-        <div className="field" style={{ maxWidth: 200 }}><label htmlFor="biz-delrate">{L('App commission', 'Commission ng app')}</label><Suffix id="biz-delrate" value={S.biz.deliveryRate} suffix="%" disabled={!S.biz.deliveryOn} onChange={(v) => set('deliveryRate', v)} /></div>
+        {isPro() ? <>
+          <label className="switch" htmlFor="biz-delon"><input type="checkbox" id="biz-delon" checked={S.biz.deliveryOn} onChange={(e) => set('deliveryOn', e.target.checked)} /><span>{L('Show delivery app prices', 'Ipakita ang delivery app prices')}</span></label>
+          <div className="field" style={{ maxWidth: 200 }}><label htmlFor="biz-delrate">{L('App commission', 'Commission ng app')}</label><Suffix id="biz-delrate" value={S.biz.deliveryRate} suffix="%" disabled={!S.biz.deliveryOn} onChange={(v) => set('deliveryRate', v)} /></div>
+        </> : <ProLock reason="delivery" title={L('Delivery app prices', 'Presyo sa delivery app')}>{L('Prices for GrabFood and foodpanda that keep your profit after commission.', 'Presyo sa GrabFood at foodpanda na pareho pa rin ang tubo kahit may commission.')}</ProLock>}
       </section>
       {meta.mode === 'cloud' && (
         <section className="card" aria-labelledby="h-acct">

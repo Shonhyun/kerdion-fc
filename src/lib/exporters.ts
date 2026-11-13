@@ -3,6 +3,7 @@
 import type { AppData } from './types';
 import { comboCalc, delivery, dimOf, getLib, getUnit, libPerBase, lineCost, lineQty, logItems, refOf, totals, uCalc, uOrders, unitPriceText, units, usedIn } from './calc';
 import { int, num, pct, todayISO } from './format';
+import { deliveryOn } from './plan';
 
 export function downloadBlob(filename: string, blob: Blob) {
   const url = URL.createObjectURL(blob);
@@ -20,7 +21,7 @@ function rows(S: AppData) {
     ['Total sales per month (PHP)', r2(t.rev)], ['Ingredients and packaging (PHP)', r2(t.cogs)], ['Tax (PHP)', r2(t.tax)], ['Profit before bills (PHP)', r2(t.gross)],
     ['Monthly bills (PHP)', r2(t.fixed)], ['Net profit per month (PHP)', r2(t.net)], ['Net profit per day (PHP)', r2(t.net / t.days)], ['Break-even orders per month', t.avg > 0 ? t.be : 'n/a'], ['Monthly profit goal (PHP)', num(S.goal) || '']];
   const prods: (string | number)[][] = [['Product', 'Type', 'Cost per serving', 'Selling price', 'Profit per order', 'Margin %', 'Food cost %', 'Orders per month', 'Sales per month', 'Profit per month', 'Delivery app price']];
-  units(S).forEach((u) => { const c = uCalc(S, u), o = uOrders(u); prods.push([u.name, u.r.kind === 'addon' ? 'Add-on' : 'Product', r2(c.cost), r2(c.sell), r2(c.profit), r2(c.margin), r2(c.foodPct), o, r2(c.sell * o), r2(c.profit * o), S.biz.deliveryOn && u.r.kind !== 'addon' ? delivery(S, c).price : '']); });
+  units(S).forEach((u) => { const c = uCalc(S, u), o = uOrders(u); prods.push([u.name, u.r.kind === 'addon' ? 'Add-on' : 'Product', r2(c.cost), r2(c.sell), r2(c.profit), r2(c.margin), r2(c.foodPct), o, r2(c.sell * o), r2(c.profit * o), deliveryOn(S) && u.r.kind !== 'addon' ? delivery(S, c).price : '']); });
   const det: (string | number)[][] = [['Product', 'Item', 'Type', 'Used per serving', 'Unit', 'Cost per serving']];
   units(S).forEach((u) => u.r.items.forEach((x) => {
     const rf = refOf(S, x.ref), c = lineCost(S, x, u.s), q = num(lineQty(x, u.s));

@@ -6,10 +6,21 @@ import { dropKeys } from '@/lib/data';
 import { focusSoon, int, nid, num, peso, tone } from '@/lib/format';
 import { Icon, PageHead, Pager, Peso, Pill, Suffix } from '../ui';
 import { update, useData, useT } from '@/store/store';
+import { isPro } from '@/lib/plan';
+import { ProLock } from '../Pro';
 
 export default function Combos() {
   const S = useData(); const L = useT();
   const all = units(S); const t = totals(S);
+  if (!isPro()) {
+    return <>
+      <PageHead title={L('Combos & upsell', 'Combos at upsell')} lead={L('Bundle products into meal deals, and see how much extra you earn when customers add a drink or side.', 'Pagsamahin ang products bilang meal deal, at tingnan ang dagdag kita kapag nag-add ng drink o side ang customer.')} />
+      <ProLock reason="combos" title={L('Combos and upsell simulator', 'Combos at upsell simulator')}>{S.combos.length
+        ? L('Your ' + S.combos.length + (S.combos.length === 1 ? ' combo is' : ' combos are') + ' saved and will come back with Pro. They are not counted in your report on the free plan.', 'Naka-save ang ' + S.combos.length + ' combos mo at babalik sa Pro. Hindi sila kasama sa report habang free plan.')
+        : L('Test meal deals and “add a drink?” offers before you launch them.', 'I-test muna ang meal deals at “add a drink?” offers bago i-launch.')}</ProLock>
+      <Pager prev={['/sales', 'Sales plan']} next={['/report', 'Profit report']} />
+    </>;
+  }
   if (all.length < 2) {
     return <>
       <PageHead title={L('Combos & upsell', 'Combos at upsell')} />

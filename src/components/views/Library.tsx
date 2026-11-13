@@ -9,7 +9,9 @@ import { fmtDate, focusSoon, nid, peso } from '@/lib/format';
 import { Icon, PageHead, Pager, UnitSelect, useHelp } from '../ui';
 import { AlertsCard } from '../blocks';
 import { LibFields } from './ProductEditor';
-import { update, useData, useT } from '@/store/store';
+import { openUpgrade, update, useData, useT } from '@/store/store';
+import { canAddPrep, isPro, lockedPreps } from '@/lib/plan';
+import { ProLock } from '../Pro';
 
 type LTab = 'ing' | 'pack' | 'prep';
 
@@ -34,7 +36,7 @@ function LibCard({ l }: { l: LibItem }) {
       </div>
       <div className="lib-meta">
         <span>{used.length ? L('Used in: ', 'Gamit sa: ') + used.join(', ') : L('Not used in any product yet', 'Hindi pa gamit sa kahit anong produkto')}</span>
-        {hist.length > 1 && <span className="hist">Price history: {hist.map((s) => fmtDate(s.d, S.lang) + ' ' + unitPriceText(rawPerBase(s), dimOf(s.unit))).join(' · ')}</span>}
+        {isPro() && hist.length > 1 && <span className="hist">Price history: {hist.map((s) => fmtDate(s.d, S.lang) + ' ' + unitPriceText(rawPerBase(s), dimOf(s.unit))).join(' · ')}</span>}
       </div>
     </div>
   );
@@ -47,6 +49,14 @@ function PrepCard({ p }: { p: Prep }) {
   const setP = (f: 'name' | 'makes' | 'unit', v: string) => update((d) => { const x = getPrep(d, p.id); if (x) x[f] = v; });
   const setY = (yid: string, f: 'qty' | 'unit', v: string) => update((d) => { const y = getPrep(d, p.id)?.items.find((i) => i.id === yid); if (y) y[f] = v; });
   const per = prepPerBase(S, p);
+  if (lockedPreps(S).has(p.id)) {
+    return (
+      <div className="item locked" aria-disabled="true">
+        <div className="item-top"><span className="name-static">{p.name || 'Sub-recipe'} <span className="lock-tag"><Icon name="lock" size={14} />{L('Locked', 'Naka-lock')}</span></span></div>
+        <div className="lib-meta"><span>{L('Read only on the free plan. Products that use it still count its cost.', 'Read only sa free plan. Kasama pa rin ang cost nito sa products na gumagamit nito.')}</span><span>{per > 0 ? unitPriceText(per, dimOf(p.unit)) : ''}</span></div>
+      </div>
+    );
+  }
   return (
     <div className="item">
       <div className="item-top">
@@ -110,7 +120,7 @@ export default function Library() {
     e.preventDefault(); setTab(order[k]); focusSoon('ltab-' + order[k], false);
   };
   const addLib = (cat: 'ing' | 'pack') => { const l = newLib(cat); update((d) => { d.library.push(l); }); setQ(''); focusSoon('lib-' + l.id + '-name'); };
-  const addPrep = () => { const p: Prep = { id: nid('p'), name: '', makes: '1', unit: 'kg', items: [] }; update((d) => { d.preps.push(p); }); focusSoon('prep-' + p.id + '-name'); };
+  const addPrep = () => { if (!canAddPrep(S)) { openUpgrade('preps'); return; } const p: Prep = { id: nid('p'), name: '', makes: '1', unit: 'kg', items: [] }; update((d) => { d.preps.push(p); }); focusSoon('prep-' + p.id + '-name'); };
   const ql = q.trim().toLowerCase();
   // Sort only when the set of items or the search changes, so a card does not jump away while you type its name.
   const idsKey = S.library.filter((l) => l.cat === tab).map((l) => l.id).join(',');
@@ -122,6 +132,7 @@ export default function Library() {
     <>
       <PageHead title={L('Ingredient prices', 'Presyo ng sangkap')} lead={L('Every ingredient you buy, saved once. When a price changes, update it here and every product that uses it updates too.', 'Lahat ng binibili mo, naka-save once. Pag nagbago ang presyo, i-update dito at updated na lahat ng produktong gumagamit nito.')} />
       <AlertsCard title={L('Recent price changes', 'Mga bagong price change')} limit={3} />
+      {!isPro() && <ProLock reason="alerts" title={L('Price history and price alerts', 'Price history at price alerts')}>{L('See every price change and how much it takes from your monthly profit.', 'Makita ang bawat price change at kung magkano ang bawas nito sa monthly profit mo.')}</ProLock>}
       <div className="libtabs" role="tablist" aria-label={L('Item types', 'Uri ng item')} onKeyDown={onKey}>
         {tabs.map(([k, label]) => <button key={k} role="tab" id={'ltab-' + k} aria-selected={tab === k} aria-controls="lpanel" tabIndex={tab === k ? 0 : -1} onClick={() => setTab(k)}>{label}</button>)}
       </div>
