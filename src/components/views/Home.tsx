@@ -6,6 +6,7 @@ import { int, peso, todayISO, tone } from '@/lib/format';
 import { Icon, PageHead } from '../ui';
 import { AlertsCard, BackupNotice, GoalBlock, SampleNotice } from '../blocks';
 import { PlanNotice } from '../Pro';
+import { LowStockCard } from './Inventory';
 import { useData, useMeta, useT } from '@/store/store';
 
 export default function Home() {
@@ -32,6 +33,7 @@ export default function Home() {
       </div>
       <GoalBlock compact />
       <AlertsCard title="Price alerts" limit={4} />
+      <LowStockCard />
       <section className="card" aria-labelledby="h-start">
         <div className="card-head"><h2 id="h-start">{L('Get started in 4 steps', 'Magsimula sa 4 steps')}</h2><p>{L('Follow these in order. You can come back and change anything anytime.', 'Sundan in order. Pwede mong balikan at baguhin kahit kailan.')}</p></div>
         <ol className="checklist">

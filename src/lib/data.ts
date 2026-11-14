@@ -16,7 +16,7 @@ export function fresh(lang: Lang = 'en', businessName = ''): AppData {
   return {
     v: 4, lang, sample: false, bannerHidden: true, onboarded: false, goal: '', lastBackup: 0,
     biz: { name: businessName, daysOpen: '26', taxOn: false, taxRate: '12', deliveryOn: false, deliveryRate: '30', round: 'exact' },
-    library: [], preps: [], recipes: [], combos: [], fixed: [], log: {}, alerts: [], ups: { main: '', addon: '', pct: '30' },
+    library: [], preps: [], recipes: [], combos: [], fixed: [], log: {}, alerts: [], stock: [], ups: { main: '', addon: '', pct: '30' },
   };
 }
 
@@ -48,7 +48,7 @@ export function sample(lang: Lang = 'en'): AppData {
       { id: nid('f'), name: 'Stall rent', amount: '10000' }, { id: nid('f'), name: 'Staff salary', amount: '12000' },
       { id: nid('f'), name: 'Electricity', amount: '2500' }, { id: nid('f'), name: 'Water', amount: '600' }, { id: nid('f'), name: 'LPG', amount: '800' },
     ],
-    log, alerts: [], ups: { main: r1.id, addon: r2.id + '~' + sM.id, pct: '30' },
+    log, alerts: [], stock: [], ups: { main: r1.id, addon: r2.id + '~' + sM.id, pct: '30' },
   };
   commitLib(s, egg, true); // seed one price alert so the feature is visible
   return s;
@@ -70,7 +70,7 @@ export function normalize(raw: any): AppData {
   // owner is sent through the quick setup instead of landing on an empty dashboard.
   const hadBiz = !!(s.biz && typeof s.biz === 'object');
   s.biz = { ...fresh().biz, ...(hadBiz ? s.biz : {}) };
-  (['library', 'recipes', 'fixed', 'preps', 'combos', 'alerts'] as const).forEach((k) => { if (!Array.isArray(s[k])) (s as unknown as Record<string, unknown[]>)[k] = []; });
+  (['library', 'recipes', 'fixed', 'preps', 'combos', 'alerts', 'stock'] as const).forEach((k) => { if (!Array.isArray(s[k])) (s as unknown as Record<string, unknown[]>)[k] = []; });
   if (!s.log || typeof s.log !== 'object') s.log = {};
   if (!s.ups || typeof s.ups !== 'object') s.ups = { main: '', addon: '', pct: '30' };
   if (s.onboarded == null) s.onboarded = hadBiz;

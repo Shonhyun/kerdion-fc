@@ -7,6 +7,8 @@ import { UNIT_LIST } from '@/lib/calc';
 import { useT } from '@/store/store';
 
 const P: Record<string, ReactNode> = {
+  bulb: <><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.6 1.1 1.3 1.1 2.2h5c0-.9.4-1.6 1.1-2.2A6 6 0 0 0 12 3z" /></>,
+  box: <><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5z" /><path d="M3 7.5 12 12l9-4.5M12 12v9" /></>,
   home: <><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V21h14V9.5" /><path d="M10 21v-6h4v6" /></>,
   bowl: <><path d="M3 11h18" /><path d="M4 11a8 8 0 0 0 16 0" /><path d="M9 7.5c0-1.5 1-2 1-3.5M14 7.5c0-1.5 1-2 1-3.5" /></>,
   basket: <><path d="M4 10h16l-1.5 10h-13z" /><path d="M8 10l3-6M16 10l-3-6" /><path d="M9 14v3M15 14v3" /></>,

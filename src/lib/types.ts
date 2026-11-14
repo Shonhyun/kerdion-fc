@@ -13,7 +13,16 @@ export interface LibItem {
   unit: string;
   yield: string;
   history: PriceSnap[];
+  /** Low-stock level, in the unit it is bought in. Empty = no alert. */
+  low?: string;
 }
+
+/**
+ * Inventory events, in the unit the item is bought in. A count sets the stock; deliveries add to it,
+ * waste removes from it, and every logged sale after the count uses it up.
+ * `at` says when a count was taken: before opening (that day's sales still come off) or after closing.
+ */
+export interface StockEntry { id: string; t: number; d: string; lid: string; kind: 'count' | 'in' | 'waste'; qty: string; at?: 'open' | 'close' }
 
 /** One item used in a product or sub-recipe. `q` holds per-size amounts when the product has sizes. */
 export interface Line { id: string; ref: string; qty: string; unit: string; q?: Record<string, string> }
@@ -67,6 +76,7 @@ export interface AppData {
   fixed: Fixed[];
   log: Record<string, Record<string, string>>;
   alerts: PriceAlert[];
+  stock: StockEntry[];
   ups: { main: string; addon: string; pct: string };
 }
 
