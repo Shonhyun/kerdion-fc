@@ -29,7 +29,7 @@ export default function Daily() {
   Object.keys(S.log).forEach((k) => { if (k.slice(0, 7) === mo && inRange(k)) stats.set(k, dayStats(S, k, items)); });
   const days = [...stats.keys()].filter((k) => stats.get(k)!.o > 0).sort();
   let act = 0; days.forEach((k) => { act += stats.get(k)!.gross - billDay; });
-  const plan = t.net / t.days * days.length, mx = Math.max(Math.abs(act), Math.abs(plan), 1);
+  const plan = t.net / t.days * days.length, vmx = Math.max(act, plan, 1);
   return (
     <>
       {head}
@@ -65,9 +65,24 @@ export default function Daily() {
       </section>
       <section className="card" aria-labelledby="h-mtd">
         <div className="card-head"><h2 id="h-mtd">{pro ? L('This month so far', 'Ngayong buwan') : L('Last ' + FREE_LOG_DAYS + ' days this month', 'Huling ' + FREE_LOG_DAYS + ' araw ngayong buwan')}</h2><p>{days.length ? days.length + L(' days logged this month.', ' araw na-log ngayong buwan.') : L('No days logged this month yet.', 'Wala pang na-log ngayong buwan.')}</p></div>
-        <div className="bars">
-          <div className="bar-row"><span className="name">{L('Actual net', 'Totoong net')}</span><span className="track" aria-hidden="true"><span className={'fill cur' + (act < 0 ? ' neg' : '')} style={{ width: Math.round(Math.abs(act) / mx * 100) + '%' }} /></span><span className="val" data-tone={tone(act)}>{peso(act, 0)}</span></div>
-          <div className="bar-row"><span className="name">{L('Plan for same days', 'Plan sa parehong araw')}</span><span className="track" aria-hidden="true"><span className="fill plan" style={{ width: Math.round(Math.abs(plan) / mx * 100) + '%' }} /></span><span className="val" data-tone={tone(plan)}>{peso(plan, 0)}</span></div>
+        <div className="vsplan">
+          <div className="vs-nums">
+            <div><span>{L('Actual net', 'Totoong net')}</span><strong data-tone={tone(act)}>{peso(act, 0)}</strong></div>
+            <div><span>{L('Plan for same days', 'Plan sa parehong araw')}</span><strong>{peso(plan, 0)}</strong></div>
+          </div>
+          {plan > 0 && days.length > 0 ? (
+            <>
+              <div className="vs-track" role="img" aria-label={L('Actual net is ', 'Ang totoong net ay ') + Math.round(act / plan * 100) + L('% of plan', '% ng plan')}>
+                <span className={'vs-fill' + (act < 0 ? ' neg' : act >= plan ? ' over' : '')} style={{ width: Math.max(0, act) / vmx * 100 + '%' }} />
+                <span className="vs-mark" style={{ left: plan / vmx * 100 + '%' }} />
+              </div>
+              <p className="vs-note" data-tone={act >= plan ? 'good' : 'bad'}>
+                {act >= plan
+                  ? peso(act - plan, 0) + L(' ahead of plan', ' lamang sa plan') + ' · ' + Math.round(act / plan * 100) + L('% of plan', '% ng plan')
+                  : peso(plan - act, 0) + L(' behind plan', ' kulang sa plan') + ' · ' + Math.max(0, Math.round(act / plan * 100)) + L('% of plan', '% ng plan')}
+              </p>
+            </>
+          ) : <p className="help">{days.length ? L('Add orders in your Sales plan to compare with your plan.', 'Mag-add ng orders sa Sales plan para maikumpara sa plan mo.') : L('Log a day to compare with your plan.', 'Mag-log ng isang araw para maikumpara sa plan mo.')}</p>}
         </div>
         <div style={{ overflowX: 'auto' }}>
           <table className="days">
