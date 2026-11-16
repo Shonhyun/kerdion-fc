@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { PageHead, Pill } from '@/components/ui';
-import { STATUS_LABEL, STATUS_TONE, acctStatus, ago, daysLeft, fmtDay, loadAccounts, setTester, type Acct, type AcctStatus } from './data';
+import { STATUS_LABEL, STATUS_TONE, acctStatus, ago, daysLeft, fmtDay, isPaid, loadAccounts, setTester, type Acct, type AcctStatus } from './data';
 
 type Filter = 'all' | AcctStatus;
 
@@ -30,7 +30,7 @@ export default function Accounts() {
   const count = (f: Filter) => f === 'all' ? accts.length : accts.filter((a) => acctStatus(a) === f).length;
   const ql = q.trim().toLowerCase();
   const shown = accts.filter((a) => (filter === 'all' || acctStatus(a) === filter) && (!ql || a.email.toLowerCase().includes(ql) || a.business_name.toLowerCase().includes(ql)));
-  const filters: [Filter, string][] = [['all', 'All'], ['pro', 'Pro'], ['tester', 'Testers'], ['expired', 'Expired'], ['free', 'Free']];
+  const filters: [Filter, string][] = [['all', 'All'], ['pro', 'Pro'], ['multi', 'Multi-Branch'], ['tester', 'Testers'], ['expired', 'Expired'], ['branch', 'Branches'], ['free', 'Free']];
 
   return (
     <>
@@ -51,12 +51,12 @@ export default function Accounts() {
                   const s = acctStatus(a); const d = daysLeft(a.current_period_end);
                   return (
                     <tr key={a.user_id}>
-                      <td><Link href={'/admin/accounts/' + a.user_id}><strong>{a.email}</strong></Link><br /><span className="help">{a.business_name || '—'} · joined {fmtDay(a.signed_up)}</span></td>
-                      <td><Pill tone={STATUS_TONE[s]}>{STATUS_LABEL[s] + (s === 'pro' && a.billing ? ' · ' + a.billing : '')}</Pill></td>
-                      <td>{a.current_period_end ? <>{fmtDay(a.current_period_end)}{s === 'pro' && <><br /><span className="help">{d} days left</span></>}</> : '—'}</td>
+                      <td><Link href={'/admin/accounts/' + a.user_id}><strong>{a.email}</strong></Link><br /><span className="help">{a.business_name || '—'} · joined {fmtDay(a.signed_up)}{a.branch_of ? ' · branch of ' + a.branch_of : ''}{a.branches ? ' · ' + a.branches + ' branches' : ''}</span></td>
+                      <td><Pill tone={STATUS_TONE[s]}>{STATUS_LABEL[s] + (isPaid(s) && a.billing ? ' · ' + a.billing : '')}</Pill></td>
+                      <td>{a.current_period_end ? <>{fmtDay(a.current_period_end)}{isPaid(s) && <><br /><span className="help">{d} days left</span></>}</> : '—'}</td>
                       <td>{a.products}{(s === 'free' || s === 'expired') && a.products > 5 ? <><br /><span className="help">{a.products - 5} locked</span></> : null}</td>
                       <td>{a.last_active ? <>{ago(a.last_active)}<br /><span className="help">{fmtDay(a.last_active)}</span></> : <span className="help">Not set up</span>}</td>
-                      <td><button className="btn btn-sm" disabled={busy === a.user_id} onClick={() => toggle(a)}>{busy === a.user_id ? 'Saving…' : a.is_tester ? 'Remove tester' : 'Make tester'}</button></td>
+                      <td>{s === 'branch' ? <span className="help">From main branch</span> : <button className="btn btn-sm" disabled={busy === a.user_id} onClick={() => toggle(a)}>{busy === a.user_id ? 'Saving…' : a.is_tester ? 'Remove tester' : 'Make tester'}</button>}</td>
                     </tr>
                   );
                 })}

@@ -23,7 +23,7 @@ function PayCard({ p, url, onDone, onZoom }: { p: Pay; url: string; onDone: () =
     <div className="adm-pay">
       <div className="meta">
         <strong style={{ fontSize: 16 }}>{p.email || p.user_id}</strong>
-        <span>Pro {p.billing === 'yearly' ? 'Yearly' : 'Monthly'} · <strong>₱{n0(p.amount)}</strong></span>
+        <span>{p.plan === 'multi' ? <strong>Multi-Branch</strong> : 'Pro'} {p.billing === 'yearly' ? 'Yearly' : 'Monthly'} · <strong>₱{n0(p.amount)}</strong></span>
         <span>Reference no.: <strong>{p.reference_no || '—'}</strong></span>
         <span className="help">Sent {fmtWhen(p.created_at)} ({ago(p.created_at)})</span>
         {p.reviewed_at && <span className="help">Reviewed {fmtWhen(p.reviewed_at)}</span>}
@@ -31,7 +31,7 @@ function PayCard({ p, url, onDone, onZoom }: { p: Pay; url: string; onDone: () =
         <Pill tone={tone} style={{ alignSelf: 'flex-start' }}>{p.status}</Pill>
         {p.status === 'pending' && (mode === 'approve' ? (
           <div className="confirm" role="alert">
-            <span>Turn on Pro {p.billing} for {p.email || 'this account'}? Check that ₱{n0(p.amount)} arrived in your Maya or BPI account first.</span>
+            <span>Turn on {p.plan === 'multi' ? 'Multi-Branch' : 'Pro'} {p.billing} for {p.email || 'this account'}? Check that ₱{n0(p.amount)} arrived in your Maya or BPI account first.</span>
             <button className="btn btn-sm btn-primary" disabled={busy} onClick={() => act('approve')}>{busy ? 'Approving…' : 'Yes, approve'}</button>
             <button className="btn btn-sm" onClick={() => setMode('')}>Cancel</button>
           </div>

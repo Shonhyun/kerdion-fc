@@ -2,13 +2,13 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
-import { PAY_QR, PRICE, entExpired, entIsPro, type Billing } from '@/lib/plan';
+import { BRANCH_LIMIT, PAY_QR, entExpired, entIsPro, planName, priceOf, type Billing, type PlanKind } from '@/lib/plan';
 import { getSupabase } from '@/lib/supabase/client';
 import { Icon, PageHead } from '../ui';
 import { PlanCards, fmtDay, useProList } from '../Pro';
 import { refreshPlan, useData, useEnt, useMeta, useT } from '@/store/store';
 
-interface PayReq { id: string; billing: Billing; amount: number; status: 'pending' | 'approved' | 'rejected'; admin_note: string | null; created_at: string; reviewed_at: string | null }
+interface PayReq { id: string; plan?: PlanKind; billing: Billing; amount: number; status: 'pending' | 'approved' | 'rejected'; admin_note: string | null; created_at: string; reviewed_at: string | null }
 
 const MAX_MB = 5;
 const TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -40,6 +40,7 @@ export default function Upgrade() {
   const S = useData(); const L = useT(); const meta = useMeta(); const ent = useEnt(); const params = useSearchParams(); const list = useProList();
   const q = params.get('plan');
   const [billing, setBilling] = useState<Billing>(q === 'monthly' ? 'monthly' : 'yearly');
+  const [tier, setTier] = useState<PlanKind>(params.get('tier') === 'multi' || ent.plan === 'multi' ? 'multi' : 'pro');
   const [last, setLast] = useState<PayReq | null>(null);
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
@@ -51,7 +52,7 @@ export default function Upgrade() {
   const load = useCallback(async () => {
     const sb = getSupabase(); if (!sb || !meta.userId) { setLoading(false); return; }
     const [{ data }] = await Promise.all([
-      sb.from('payment_requests').select('id, billing, amount, status, admin_note, created_at, reviewed_at').eq('user_id', meta.userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+      sb.from('payment_requests').select('id, plan, billing, amount, status, admin_note, created_at, reviewed_at').eq('user_id', meta.userId).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       refreshPlan(true),
     ]);
     setLast((data as PayReq) || null); setLoading(false);
@@ -63,7 +64,23 @@ export default function Upgrade() {
     return <><PageHead title={L('Plan & billing', 'Plan at bayad')} /><div className="empty"><strong>{L('Plans need an account', 'Kailangan ng account para sa plans')}</strong><p>{L('Local mode has every feature. Connect Supabase to use accounts and plans.', 'Kumpleto ang features sa local mode. I-connect ang Supabase para sa accounts at plans.')}</p></div></>;
   }
 
+  if (ent.branchOf) {
+    return (
+      <>
+        <PageHead title={L('Plan & billing', 'Plan at bayad')} />
+        <section className="card"><div className="status-box"><Icon name="store" /><div>
+          <strong>{L('Branch account: ' + ent.branchName, 'Branch account: ' + ent.branchName)}</strong>
+          <p className="help">{entIsPro(ent)
+            ? L('Your main branch pays for Saffra Multi-Branch, so every Pro feature is on for this branch.', 'Ang main branch mo ang nagbabayad ng Saffra Multi-Branch, kaya naka-on lahat ng Pro features sa branch na ito.')
+            : L('Your main branch\'s Multi-Branch plan is not active, so this branch is on the free plan for now. Nothing is deleted. Ask your main branch to renew.', 'Hindi active ang Multi-Branch plan ng main branch mo, kaya free plan muna ang branch na ito. Walang nabura. Sabihan ang main branch na mag-renew.')}</p>
+        </div></div></section>
+      </>
+    );
+  }
+
   const pro = entIsPro(ent); const pending = last?.status === 'pending';
+  const price = priceOf(tier, billing);
+  const lastPlan = planName(last?.plan);
   const pick = (f: File | undefined) => {
     setErr('');
     if (!f) return;
@@ -81,7 +98,7 @@ export default function Upgrade() {
     const path = meta.userId + '/' + Date.now() + '.' + ext;
     const up = await sb.storage.from('payment-proofs').upload(path, file, { contentType: file.type, upsert: false });
     if (up.error) { setBusy(false); setErr(L('Upload failed. Check your internet and try again.', 'Hindi na-upload. I-check ang internet at subukan ulit.')); return; }
-    const ins = await sb.from('payment_requests').insert({ billing, amount: PRICE[billing], reference_no: ref.trim().slice(0, 60) || null, proof_path: path });
+    const ins = await sb.from('payment_requests').insert({ plan: tier, billing, amount: price, reference_no: ref.trim().slice(0, 60) || null, proof_path: path });
     setBusy(false);
     if (ins.error) {
       setErr(ins.error.code === '23505' ? L('You already have a payment waiting for verification.', 'May payment ka nang hinihintay ma-verify.') : L('Could not send your payment. Please try again.', 'Hindi na-send ang payment. Subukan ulit.'));
@@ -97,7 +114,7 @@ export default function Upgrade() {
       {ent.tester ? (
         <div className="status-box"><Icon name="star" /><div><strong>{L('Tester: full access', 'Tester: full access')}</strong><p className="help">{L('Thank you for testing Saffra. Every Pro feature is on, free.', 'Salamat sa pag-test ng Saffra. Naka-on lahat ng Pro features, libre.')}</p></div></div>
       ) : pro ? (
-        <div className="status-box"><Icon name="check" /><div><strong>Saffra Pro · {ent.billing === 'yearly' ? 'Yearly' : 'Monthly'}</strong>
+        <div className="status-box"><Icon name="check" /><div><strong>Saffra {planName(ent.plan)} · {ent.billing === 'yearly' ? 'Yearly' : 'Monthly'}</strong>
           <p className="help">{L('Active until ', 'Active hanggang ') + fmtDay(ent.periodEnd, S.lang) + '. ' + L('Renew before then to keep your products unlocked. Paying early adds the time on top.', 'Mag-renew bago ang petsang iyan para hindi ma-lock ang products. Pag maaga kang nagbayad, nadadagdag lang ang oras.')}</p></div></div>
       ) : entExpired(ent) ? (
         <div className="status-box bad"><Icon name="lock" /><div><strong>{L('Pro ended on ', 'Natapos ang Pro noong ') + fmtDay(ent.periodEnd, S.lang)}</strong>
@@ -116,7 +133,7 @@ export default function Upgrade() {
         <section className="card" aria-labelledby="h-wait">
           <div className="card-head"><h2 id="h-wait">{L('Payment received, waiting for verification', 'Natanggap ang bayad, hinihintay ma-verify')}</h2></div>
           <div className="status-box warn"><Icon name="cal" /><div>
-            <strong>Pro {last.billing === 'yearly' ? 'Yearly' : 'Monthly'} · ₱{n0(last.amount)}</strong>
+            <strong>{lastPlan} {last.billing === 'yearly' ? 'Yearly' : 'Monthly'} · ₱{n0(last.amount)}</strong>
             <p className="help">{L('Sent on ', 'Na-send noong ') + fmtWhen(last.created_at, S.lang) + '. ' + L('We check payments within 24 hours. Pro turns on by itself once it is verified.', 'Chine-check namin ang bayad within 24 hours. Kusa nang mag-o-on ang Pro pag na-verify na.')}</p>
           </div></div>
           <button className="btn" style={{ alignSelf: 'flex-start' }} onClick={() => { setLoading(true); load(); }}>{L('Check again', 'I-check ulit')}</button>
@@ -128,17 +145,32 @@ export default function Upgrade() {
               <p className="help">{(last.admin_note ? last.admin_note + ' ' : '') + L('Please send it again, or message us on Viber.', 'Paki-send ulit, o mag-message sa amin sa Viber.')}</p></div></div>
           )}
           <section className="card" aria-labelledby="h-choose">
-            <div className="card-head"><h2 id="h-choose">{pro ? L('Renew or extend Pro', 'Mag-renew o mag-extend ng Pro') : L('1. Choose your plan', '1. Pumili ng plan')}</h2></div>
-            <PlanCards onPick={setBilling} picked={billing} />
-            <ul className="pro-list">{list.map((x) => <li key={x}><Icon name="check" size={16} />{x}</li>)}</ul>
+            <div className="card-head"><h2 id="h-choose">{pro ? L('Renew, extend or change your plan', 'Mag-renew, mag-extend o magpalit ng plan') : L('1. Choose your plan', '1. Pumili ng plan')}</h2></div>
+            <div className="seg2 plan-tier" role="group" aria-label={L('Plan', 'Plan')}>
+              <button type="button" aria-pressed={tier === 'pro'} onClick={() => setTier('pro')}>Pro · {L('1 business', '1 business')}</button>
+              <button type="button" aria-pressed={tier === 'multi'} onClick={() => setTier('multi')}>Multi-Branch · {L('main + ' + BRANCH_LIMIT + ' branches', 'main + ' + BRANCH_LIMIT + ' branches')}</button>
+            </div>
+            <PlanCards onPick={setBilling} picked={billing} tier={tier} />
+            <ul className="pro-list">
+              {tier === 'multi' && [
+                L('Everything in Pro, for your main branch and every branch', 'Lahat ng nasa Pro, para sa main branch at bawat branch'),
+                L('Up to ' + BRANCH_LIMIT + ' branch logins that you create (email and password)', 'Hanggang ' + BRANCH_LIMIT + ' branch logins na ikaw ang gagawa (email at password)'),
+                L('See sales, profit and low stock of every branch', 'Makita ang benta, tubo at paubos na stock ng bawat branch'),
+                L('Open any branch to add, edit or delete its data', 'Buksan ang kahit anong branch para mag-add, edit o delete ng data'),
+              ].map((x) => <li key={x}><Icon name="store" size={16} />{x}</li>)}
+              {list.map((x) => <li key={x}><Icon name="check" size={16} />{x}</li>)}
+            </ul>
+            {pro && !ent.tester && ent.plan !== tier && (
+              <p className="help">{L('Changing plans starts the new plan on the day we verify your payment. Days left on your current plan are not carried over.', 'Pag nagpalit ng plan, magsisimula ang bago sa araw na ma-verify ang bayad mo. Hindi madadala ang natitirang araw ng current plan mo.')}</p>
+            )}
           </section>
           <section className="card" aria-labelledby="h-pay">
-            <div className="card-head"><h2 id="h-pay">{L('2. Pay by QR', '2. Magbayad by QR')}</h2><p>{L('Amount to pay: ', 'Babayaran: ')}<strong>₱{n0(PRICE[billing])}</strong> · Pro {billing === 'yearly' ? 'Yearly' : 'Monthly'}</p></div>
+            <div className="card-head"><h2 id="h-pay">{L('2. Pay by QR', '2. Magbayad by QR')}</h2><p>{L('Amount to pay: ', 'Babayaran: ')}<strong>₱{n0(price)}</strong> · {planName(tier)} {billing === 'yearly' ? 'Yearly' : 'Monthly'}</p></div>
             <div className="grid2">
               <QrBox />
               <ol className="pay-steps">
                 <li>{L('Open GCash, Maya or your bank app and tap ', 'Buksan ang GCash, Maya o bank app mo at i-tap ang ')}<strong>Scan QR</strong>{L(' (or Pay QR).', ' (o Pay QR).')}</li>
-                <li>{L('Scan the code (on the same phone? save it as a picture first) and pay exactly ', 'I-scan ang code (parehong phone? i-save muna as picture) at bayaran ng eksaktong ')}<strong>₱{n0(PRICE[billing])}</strong>.</li>
+                <li>{L('Scan the code (on the same phone? save it as a picture first) and pay exactly ', 'I-scan ang code (parehong phone? i-save muna as picture) at bayaran ng eksaktong ')}<strong>₱{n0(price)}</strong>.</li>
                 <li>{L('Take a screenshot of the receipt that shows the reference number.', 'Mag-screenshot ng receipt na may reference number.')}</li>
                 <li>{L('Upload the screenshot below and tap Send.', 'I-upload ang screenshot sa ibaba at i-tap ang Send.')}</li>
               </ol>

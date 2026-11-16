@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { progress } from '@/lib/calc';
 import { Icon } from './ui';
-import { signOut, undoLast, update, useData, useEnt, useMeta, useT, useToast } from '@/store/store';
+import { closeBranch, signOut, undoLast, update, useData, useEnt, useMeta, useT, useToast } from '@/store/store';
 import { LogoMark } from '@/components/Logo';
-import { isPro } from '@/lib/plan';
+import { entMulti, isPro, planName } from '@/lib/plan';
 import { ProBadge, UpgradeModal } from './Pro';
 
 type Theme = 'light' | 'dark' | 'auto';
@@ -68,8 +68,9 @@ export default function Shell({ children }: { children: ReactNode }) {
     { href: '/inventory', label: L('Inventory', 'Inventory'), hint: L('Stock and low alerts', 'Stock at paubos na'), icon: 'box' },
     { href: '/combos', label: L('Combos & upsell', 'Combos at upsell'), hint: L('Meal deals, add-ons', 'Meal deals, add-ons'), icon: 'combo', pro: !pro },
     { href: '/export', label: L('Export & backup', 'Export at backup'), hint: 'Excel, PDF, backup', icon: 'down' },
-    ...(cloud ? [{ href: '/upgrade', label: L('Plan & billing', 'Plan at bayad'), hint: pro ? (ent.tester ? L('Tester: full access', 'Tester: full access') : 'Saffra Pro') : L('Free plan · Go Pro', 'Free plan · Mag-Pro'), icon: 'star' }] : []),
-    ...(cloud && ent.admin ? [{ href: '/admin', label: L('Admin panel', 'Admin panel'), hint: L('Payments and subscribers', 'Bayad at subscribers'), icon: 'shield' }] : []),
+    ...(cloud && !meta.viewing && !ent.branchOf && (entMulti(ent) || ent.plan === 'multi') ? [{ href: '/branches', label: L('Branches', 'Mga branch'), hint: L('Sales and stock of every branch', 'Benta at stock ng bawat branch'), icon: 'store' }] : []),
+    ...(cloud && !meta.viewing ? [{ href: '/upgrade', label: L('Plan & billing', 'Plan at bayad'), hint: ent.branchOf ? L('Managed by your main branch', 'Main branch ang bahala') : pro ? (ent.tester ? L('Tester: full access', 'Tester: full access') : 'Saffra ' + planName(ent.plan)) : L('Free plan · Go Pro', 'Free plan · Mag-Pro'), icon: 'star' }] : []),
+    ...(cloud && ent.admin && !meta.viewing ? [{ href: '/admin', label: L('Admin panel', 'Admin panel'), hint: L('Payments and subscribers', 'Bayad at subscribers'), icon: 'shield' }] : []),
     { group: L('Help', 'Tulong') },
     { href: '/guide', label: L('How to use', 'Paano gamitin'), hint: L('Quick guide', 'Mabilis na guide'), icon: 'book' },
     { href: '/business', label: 'Business info', hint: L('Name, tax, delivery, rounding', 'Pangalan, tax, delivery, rounding'), icon: 'store' },
@@ -126,6 +127,7 @@ export default function Shell({ children }: { children: ReactNode }) {
             <div className="acct">
               <span className="help">{L('Signed in as', 'Naka-sign in bilang')}</span>
               <span className="email">{meta.email}</span>
+              {ent.branchOf && <span className="help">{L('Branch: ', 'Branch: ') + ent.branchName}</span>}
               <SyncLabel />
               <button className="btn btn-sm" onClick={() => signOut()}><Icon name="logout" size={16} />{L('Sign out', 'Mag-sign out')}</button>
             </div>
@@ -135,7 +137,17 @@ export default function Shell({ children }: { children: ReactNode }) {
           <nav className="side-legal" aria-label="Legal"><Link href="/privacy">Privacy Policy</Link><Link href="/terms">Terms of Use</Link></nav>
         </div>
       </aside>
-      <main className="main"><div className="main-inner">{children}</div></main>
+      <main className="main"><div className="main-inner">
+        {meta.viewing && (
+          <div className="status-box warn branch-bar" role="status">
+            <Icon name="store" />
+            <div style={{ flex: 1 }}><strong>{L('You are inside the ' + meta.viewing.name + ' branch', 'Nasa loob ka ng ' + meta.viewing.name + ' branch')}</strong>
+              <p className="help">{L('Everything you see and change here is this branch\'s data, saved straight to their account.', 'Data ng branch na ito ang nakikita at binabago mo dito, at diretsong naka-save sa account nila.')}</p></div>
+            <button className="btn btn-sm" onClick={() => closeBranch()}><Icon name="left" size={16} />{L('Back to main', 'Balik sa main')}</button>
+          </div>
+        )}
+        {children}
+      </div></main>
       <Toast />
       <UpgradeModal />
     </div>

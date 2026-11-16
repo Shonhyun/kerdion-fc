@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Icon, PageHead, Pill } from '@/components/ui';
 import { useAdmin } from './AdminShell';
-import { STATUS_LABEL, STATUS_TONE, acctStatus, ago, daysLeft, fmtDay, loadAccounts, loadPayments, n0, peso0, type Acct, type Pay } from './data';
+import { priceOf } from '@/lib/plan';
+import { STATUS_LABEL, STATUS_TONE, acctStatus, isPaid, ago, daysLeft, fmtDay, loadAccounts, loadPayments, n0, peso0, type Acct, type Pay } from './data';
 
 export default function Overview() {
   const { pending } = useAdmin();
@@ -27,13 +28,13 @@ export default function Overview() {
   const approved = pays.filter((p) => p.status === 'approved');
   const revMonth = approved.filter((p) => p.reviewed_at && new Date(p.reviewed_at).getTime() >= monthStart).reduce((a, p) => a + p.amount, 0);
   const revAll = approved.reduce((a, p) => a + p.amount, 0);
-  const pro = accts.filter((a) => acctStatus(a) === 'pro');
+  const pro = accts.filter((a) => isPaid(acctStatus(a)));
   const monthly = pro.filter((a) => a.billing !== 'yearly').length, yearly = pro.length - monthly;
   const testers = accts.filter((a) => a.is_tester).length;
   const expired = accts.filter((a) => acctStatus(a) === 'expired').length;
   const newWeek = accts.filter((a) => new Date(a.signed_up).getTime() >= weekAgo).length;
   // Steady monthly income from active plans: yearly plans spread over 12 months.
-  const mrr = monthly * 299 + Math.round(yearly * 2990 / 12);
+  const mrr = pro.reduce((t, a) => t + (a.billing === 'yearly' ? priceOf(a.plan === 'multi' ? 'multi' : 'pro', 'yearly') / 12 : priceOf(a.plan === 'multi' ? 'multi' : 'pro', 'monthly')), 0);
   const expiring = pro.filter((a) => daysLeft(a.current_period_end) <= 7).sort((x, y) => daysLeft(x.current_period_end) - daysLeft(y.current_period_end));
   const recentPays = pays.slice().sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 6);
   const recentAccts = accts.slice(0, 6);
@@ -53,8 +54,8 @@ export default function Overview() {
 
       <div className="kpis">
         <div className="stat"><span className="k">Sales this month</span><span className="v">{peso0(revMonth)}</span><span className="s">{peso0(revAll)} all time</span></div>
-        <div className="stat"><span className="k">Monthly income from plans</span><span className="v">{peso0(mrr)}</span><span className="s">Yearly plans spread over 12 months</span></div>
-        <div className="stat"><span className="k">Active Pro</span><span className="v">{n0(pro.length)}</span><span className="s">{monthly} monthly · {yearly} yearly</span></div>
+        <div className="stat"><span className="k">Monthly income from plans</span><span className="v">{peso0(Math.round(mrr))}</span><span className="s">Yearly plans spread over 12 months</span></div>
+        <div className="stat"><span className="k">Active paid plans</span><span className="v">{n0(pro.length)}</span><span className="s">{monthly} monthly · {yearly} yearly</span></div>
         <div className="stat"><span className="k">Accounts</span><span className="v">{n0(accts.length)}</span><span className="s">+{newWeek} this week · {testers} testers · {expired} expired</span></div>
       </div>
 

@@ -3,7 +3,7 @@
 import { getSupabase } from '@/lib/supabase/client';
 
 export interface Pay {
-  id: string; user_id: string; email: string | null; billing: 'monthly' | 'yearly'; amount: number;
+  id: string; user_id: string; email: string | null; plan?: 'pro' | 'multi'; billing: 'monthly' | 'yearly'; amount: number;
   reference_no: string | null; proof_path: string; status: 'pending' | 'approved' | 'rejected';
   admin_note: string | null; created_at: string; reviewed_at: string | null;
 }
@@ -11,13 +11,17 @@ export interface Acct {
   user_id: string; email: string; business_name: string; signed_up: string; products: number;
   plan: string; billing: string | null; current_period_end: string | null; is_tester: boolean;
   last_active: string | null;
+  /** Email of the main branch, when this is a branch account. */
+  branch_of?: string | null;
+  /** How many branch accounts this main branch has. */
+  branches?: number;
 }
 /** One account's saved business, as the admin sees it (read-only). */
 export interface BizView {
   user_id: string; email: string; signed_up: string; last_sign_in: string | null;
   business_name: string; data: unknown; created_at: string | null; updated_at: string | null;
 }
-export type AcctStatus = 'tester' | 'pro' | 'expired' | 'free';
+export type AcctStatus = 'tester' | 'multi' | 'pro' | 'expired' | 'branch' | 'free';
 
 export const n0 = (v: number) => v.toLocaleString('en-US');
 export const peso0 = (v: number) => '₱' + n0(v);
@@ -39,13 +43,17 @@ export function daysLeft(iso: string | null) {
   return Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
 }
 export function acctStatus(a: Acct): AcctStatus {
+  if (a.branch_of) return 'branch';
   if (a.is_tester) return 'tester';
-  if (a.plan === 'pro' && a.current_period_end && new Date(a.current_period_end).getTime() > Date.now()) return 'pro';
-  if (a.plan === 'pro') return 'expired';
+  const paid = a.plan === 'pro' || a.plan === 'multi';
+  if (paid && a.current_period_end && new Date(a.current_period_end).getTime() > Date.now()) return a.plan === 'multi' ? 'multi' : 'pro';
+  if (paid) return 'expired';
   return 'free';
 }
-export const STATUS_LABEL: Record<AcctStatus, string> = { tester: 'Tester', pro: 'Pro', expired: 'Expired', free: 'Free' };
-export const STATUS_TONE: Record<AcctStatus, string> = { tester: 'good', pro: 'good', expired: 'bad', free: 'none' };
+/** Paying and active, on either plan. */
+export const isPaid = (s: AcctStatus) => s === 'pro' || s === 'multi';
+export const STATUS_LABEL: Record<AcctStatus, string> = { tester: 'Tester', multi: 'Multi-Branch', pro: 'Pro', expired: 'Expired', branch: 'Branch', free: 'Free' };
+export const STATUS_TONE: Record<AcctStatus, string> = { tester: 'good', multi: 'good', pro: 'good', expired: 'bad', branch: 'none', free: 'none' };
 
 export async function loadPayments(status: 'pending' | 'approved' | 'rejected' | 'all' = 'all', limit = 200): Promise<Pay[]> {
   const sb = getSupabase(); if (!sb) return [];

@@ -653,3 +653,8 @@ img { max-width: 100%; }
 .inv-entry { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; padding: 14px; border-radius: 14px; background: var(--surface-2); border: 1px solid var(--line); margin-top: 4px; }
 .inv-entry-btns { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; }
 @media (max-width: 560px) { .inv-item { grid-template-columns: 1fr; } .inv-actions { justify-content: flex-start; } }
+
+/* Multi-Branch: shown on every page while the main branch has a branch open. */
+.branch-bar { flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.branch-bar .help { margin: 2px 0 0; }
+.plan-tier { margin-bottom: 4px; }

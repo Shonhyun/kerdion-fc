@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, type ReactNode } from 'react';
-import { FREE_LOG_DAYS, FREE_PREPS, FREE_PRODUCTS, PRICE, YEARLY_SAVES, entExpired, isPro, lockedIds, productCount, type Billing } from '@/lib/plan';
+import { FREE_LOG_DAYS, FREE_PREPS, FREE_PRODUCTS, MULTI_YEARLY_SAVES, YEARLY_SAVES, entExpired, isPro, lockedIds, planName, priceOf, productCount, type Billing, type PlanKind } from '@/lib/plan';
 import { closeUpgrade, openUpgrade, useData, useEnt, useMeta, useT, useUpgrade, type UpgradeReason } from '@/store/store';
 import { Icon } from './ui';
 
@@ -32,18 +32,19 @@ export function useProList(): string[] {
 export function ProBadge() { return <span className="pro-badge"><Icon name="star" size={12} />Pro</span>; }
 
 /** The two plans side by side. Yearly comes first and is marked as the best value. */
-export function PlanCards({ onPick, picked }: { onPick: (b: Billing) => void; picked?: Billing }) {
+export function PlanCards({ onPick, picked, tier = 'pro' }: { onPick: (b: Billing) => void; picked?: Billing; tier?: PlanKind }) {
   const L = useT();
+  const saves = tier === 'multi' ? MULTI_YEARLY_SAVES : YEARLY_SAVES;
   const plans: [Billing, string, string, string][] = [
-    ['yearly', L('Yearly', 'Yearly'), '₱' + n0(PRICE.yearly), L('per year · save ₱', 'kada taon · tipid ₱') + n0(YEARLY_SAVES) + L(' (2 months free)', ' (2 buwang libre)')],
-    ['monthly', L('Monthly', 'Monthly'), '₱' + n0(PRICE.monthly), L('per month', 'kada buwan')],
+    ['yearly', L('Yearly', 'Yearly'), '₱' + n0(priceOf(tier, 'yearly')), L('per year · save ₱', 'kada taon · tipid ₱') + n0(saves) + L(' (2 months free)', ' (2 buwang libre)')],
+    ['monthly', L('Monthly', 'Monthly'), '₱' + n0(priceOf(tier, 'monthly')), L('per month', 'kada buwan')],
   ];
   return (
     <div className="plans" role="group" aria-label={L('Choose a plan', 'Pumili ng plan')}>
       {plans.map(([b, name, price, sub]) => (
         <button key={b} type="button" className={'plan' + (b === 'yearly' ? ' best' : '')} aria-pressed={picked ? picked === b : undefined} onClick={() => onPick(b)}>
           {b === 'yearly' && <span className="plan-flag">{L('Best value', 'Best value')}</span>}
-          <span className="plan-name">Pro {name}</span>
+          <span className="plan-name">{planName(tier)} {name}</span>
           <span className="plan-price">{price}</span>
           <span className="plan-sub">{sub}</span>
         </button>
