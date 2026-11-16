@@ -10,6 +10,18 @@ export type Billing = keyof typeof PRICE;
 export const YEARLY_SAVES = PRICE.monthly * 12 - PRICE.yearly;
 
 /**
+ * Saffra Multi-Branch: everything in Pro for the main branch, plus up to BRANCH_LIMIT branch
+ * accounts that the main branch can watch and edit. The prices must match the payment policy in
+ * supabase/branches.sql.
+ */
+export const MULTI_PRICE = { monthly: 799, yearly: 7990 } as const;
+export const MULTI_YEARLY_SAVES = MULTI_PRICE.monthly * 12 - MULTI_PRICE.yearly;
+export const BRANCH_LIMIT = 3;
+export type PlanKind = 'pro' | 'multi';
+export const priceOf = (plan: PlanKind, b: Billing) => (plan === 'multi' ? MULTI_PRICE : PRICE)[b];
+export const planName = (plan: string | null | undefined) => plan === 'multi' ? 'Multi-Branch' : 'Pro';
+
+/**
  * Where users send payment. Both are InstaPay QR codes, so GCash, Maya and most bank apps can
  * scan either one. The images live in public/.
  */
@@ -21,22 +33,33 @@ export const PAY_QR = [
 /** The signed-in account's plan, as stored in Supabase (read-only for users). */
 export interface Ent {
   loaded: boolean;
-  plan: 'free' | 'pro';
+  plan: 'free' | 'pro' | 'multi';
   billing: Billing | null;
   periodStart: string | null;
   periodEnd: string | null;
   tester: boolean;
   admin: boolean;
+  /** Set on branch accounts: the main branch's user id, this branch's name, and whether it is turned on. */
+  branchOf: string | null;
+  branchName: string;
+  branchActive: boolean;
 }
-export const FREE_ENT: Ent = { loaded: false, plan: 'free', billing: null, periodStart: null, periodEnd: null, tester: false, admin: false };
+export const FREE_ENT: Ent = { loaded: false, plan: 'free', billing: null, periodStart: null, periodEnd: null, tester: false, admin: false, branchOf: null, branchName: '', branchActive: true };
 
+const paid = (p: Ent['plan']) => p === 'pro' || p === 'multi';
 export function entIsPro(e: Ent, now = Date.now()): boolean {
   if (e.tester) return true;
-  return e.plan === 'pro' && !!e.periodEnd && new Date(e.periodEnd).getTime() > now;
+  return paid(e.plan) && !!e.periodEnd && new Date(e.periodEnd).getTime() > now;
 }
-/** Pro that ran out: the plan says pro but the end date has passed. */
+/** Pro (or Multi-Branch) that ran out: the plan is paid but the end date has passed. */
 export function entExpired(e: Ent, now = Date.now()): boolean {
-  return !e.tester && e.plan === 'pro' && !!e.periodEnd && new Date(e.periodEnd).getTime() <= now;
+  return !e.tester && paid(e.plan) && !!e.periodEnd && new Date(e.periodEnd).getTime() <= now;
+}
+/** This account is a main branch that can add and manage branches right now. Testers can too. */
+export function entMulti(e: Ent, now = Date.now()): boolean {
+  if (e.branchOf) return false;
+  if (e.tester) return true;
+  return e.plan === 'multi' && !!e.periodEnd && new Date(e.periodEnd).getTime() > now;
 }
 
 // ---------- the current gate ----------

@@ -66,6 +66,7 @@ Open http://localhost:3000. You will be sent to the sign-in page.
 1. Push this project to GitHub.
 2. In Vercel, **Add New → Project** and import the repository. The framework is detected as Next.js.
 3. Add the environment variables `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `NEXT_PUBLIC_SITE_URL` (your Vercel address).
+   For Multi-Branch, also add `SUPABASE_SERVICE_ROLE_KEY` (Supabase **Project Settings → API → service_role**). It is used only on the server, by `/api/branches`, to create branch logins. Never add a `NEXT_PUBLIC_` prefix to it.
 4. Deploy. Then put the final address in Supabase **Site URL** and **Redirect URLs** (step 1.3).
 
 ## Scripts
@@ -102,6 +103,25 @@ Limits and prices live in `src/lib/plan.ts`.
 4. Receipt screenshots go to the private `payment-proofs` storage bucket (5 MB max, PNG, JPG or WEBP). Only the owner and admins can open them.
 
 The plan checks run in the browser, so they keep honest users honest; the plan itself and every payment record are protected by Row Level Security in Supabase.
+
+## Saffra Multi-Branch
+
+| | Multi-Branch Monthly | Multi-Branch Yearly |
+|---|---|---|
+| Price | ₱799 / month | ₱7,990 / year (2 months free) |
+| Includes | Everything in Pro for the main branch, plus up to 3 branch accounts with Pro features | Same |
+
+- The account that pays is the **main branch**. On **Branches** (`/branches`) it adds a branch with a name, an email and a password, optionally starting from a copy of its own products, ingredient prices and expenses (sales and stock start empty). The branch staff sign in with those details and use Saffra as usual.
+- The main branch sees every branch's sales today, this week and this month, gross profit, low stock, last save and a price and margin comparison by product. **Open and edit** switches the whole app into that branch, so the main branch can add, edit or delete anything there; a bar on every page shows which branch is open and goes back to the main branch.
+- Branch logins can be renamed, given a new email or password, **turned off** (login stops, data kept, still visible to the main branch) or **deleted** (login and data erased). At most 3 branches can be on at once.
+- Branch accounts get Pro features while the main branch's Multi-Branch is active. If it lapses, branches drop to the free limits and the main branch loses access to them until it renews. Nothing is deleted. Testers count as Multi-Branch.
+- Payment and approval work like Pro: the user picks Multi-Branch on `/upgrade`, and the admin sees **Multi-Branch** on the payment card. Changing between Pro and Multi-Branch starts the new plan on approval.
+- Prices and the branch limit live in `src/lib/plan.ts` (`MULTI_PRICE`, `BRANCH_LIMIT`); the prices must also match the payment policy in `supabase/branches.sql`.
+
+### Setup
+
+1. Run [`supabase/branches.sql`](supabase/branches.sql) in the Supabase SQL Editor, after `schema.sql` and `billing.sql`.
+2. Add `SUPABASE_SERVICE_ROLE_KEY` to the Vercel environment variables (see Deploy step 3) and redeploy.
 
 ## Project structure
 
